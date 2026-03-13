@@ -5,6 +5,18 @@ from langdetect import detect, DetectorFactory
 # Set seed for deterministic language detection
 DetectorFactory.seed = 0
 
+def load_spacy_model(model_name):
+    """
+    Helper function to load a spaCy model. If it's not installed,
+    it will attempt to download it programmatically before loading.
+    """
+    try:
+        return spacy.load(model_name)
+    except OSError:
+        print(f"Model '{model_name}' not found. Downloading it now...")
+        spacy.cli.download(model_name)
+        return spacy.load(model_name)
+
 def detect_language_and_load_model(extracted_data):
     """
     Detects language of the extracted text (Portuguese or English)
@@ -20,14 +32,14 @@ def detect_language_and_load_model(extracted_data):
 
     if lang == 'pt':
         print("Detected language: Portuguese")
-        nlp = spacy.load("pt_core_news_lg")
+        nlp = load_spacy_model("pt_core_news_lg")
     elif lang == 'en':
         print("Detected language: English")
-        nlp = spacy.load("en_core_web_lg")
+        nlp = load_spacy_model("en_core_web_lg")
     else:
         # Fallback to English or raise an error depending on requirement
         print(f"Detected language '{lang}', which is unsupported. Defaulting to English.")
-        nlp = spacy.load("en_core_web_lg")
+        nlp = load_spacy_model("en_core_web_lg")
 
     return nlp
 
