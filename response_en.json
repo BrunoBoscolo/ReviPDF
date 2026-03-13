@@ -1,0 +1,46 @@
+{
+    "metadata": {
+        "source_file": "test_document_en.pdf",
+        "total_paragraphs": 3
+    },
+    "extracted_text": [
+        {
+            "page": 1,
+            "text": "The President of the United States, Joe Biden, visited Washington D.C. on November 15, 2023."
+        },
+        {
+            "page": 1,
+            "text": "During this meeting, new advances in technology, artificial intelligence, and environmental impacts were di"
+        },
+        {
+            "page": 1,
+            "text": "Joe Biden was in Washington D.C. on the 15th of November 2023 for an official visit."
+        }
+    ],
+    "named_entities": {
+        "PERSON": [
+            "Joe Biden"
+        ],
+        "LOCATION": [
+            "the United States",
+            "Washington D.C."
+        ],
+        "DATE": [
+            "November 15, 2023",
+            "the 15th of November 2023"
+        ]
+    },
+    "redundancies": [
+        {
+            "score": 0.9057,
+            "para1": {
+                "page": 1,
+                "text": "The President of the United States, Joe Biden, visited Washington D.C. on November 15, 2023."
+            },
+            "para2": {
+                "page": 1,
+                "text": "Joe Biden was in Washington D.C. on the 15th of November 2023 for an official visit."
+            }
+        }
+    ]
+}
