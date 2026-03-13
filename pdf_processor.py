@@ -130,3 +130,41 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
                 })
 
     return redundancies
+
+
+def process_pdf_and_export_json(filepath, output_json="response.json"):
+    """
+    Main pipeline function that processes a PDF and exports the extracted data,
+    named entities, and semantic redundancies into a JSON file.
+    """
+    import json
+
+    # 1. Extract text and pages
+    extracted_data = extract_text_from_pdf(filepath)
+
+    # 2. Detect language and load appropriate spaCy model
+    nlp = detect_language_and_load_model(extracted_data)
+
+    # 3. Extract Named Entities
+    entities = extract_named_entities(extracted_data, nlp)
+
+    # 4. Detect Semantic Redundancies
+    redundancies = detect_semantic_redundancy(extracted_data, nlp)
+
+    # Compile the final response payload
+    response_data = {
+        "metadata": {
+            "source_file": filepath,
+            "total_paragraphs": len(extracted_data)
+        },
+        "extracted_text": extracted_data,
+        "named_entities": entities,
+        "redundancies": redundancies
+    }
+
+    # Export to JSON
+    with open(output_json, 'w', encoding='utf-8') as f:
+        json.dump(response_data, f, indent=4, ensure_ascii=False)
+
+    print(f"Data successfully exported to {output_json}")
+    return response_data
