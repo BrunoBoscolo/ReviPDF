@@ -144,6 +144,64 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
     return redundancies
 
 
+def evaluate_vocabulary(data, nlp):
+    """
+    Evaluates vocabulary using wordfreq.
+    Provides:
+    - Vocabulary Frequency Counter (Term Frequency)
+    - Rare Word & Jargon Flagger (Corpus Mapping)
+    - Lexical Richness & Readability Scorer
+    """
+    from collections import Counter
+    import wordfreq
+
+    lang = nlp.meta['lang'] # 'en' or 'pt'
+
+    words = []
+    lemmas = []
+
+    for item in data:
+        doc = nlp(item["text"])
+        for token in doc:
+            if token.is_alpha and not token.is_stop and not token.is_punct:
+                words.append(token.text.lower())
+                lemmas.append(token.lemma_.lower())
+
+    # Vocabulary Frequency Counter (Term Frequency)
+    term_frequency = dict(Counter(lemmas))
+
+    # Rare Word & Jargon Flagger (Corpus Mapping)
+    # Using Zipf frequency: 1.0 to 8.0, lower means rarer.
+    # threshold for rare words: < 3.0
+    rare_words = {}
+    total_zipf = 0
+    valid_words_count = 0
+
+    for word in set(words):
+        zipf = wordfreq.zipf_frequency(word, lang)
+        # Include words with 0.0 frequency as they are the rarest (out of vocabulary)
+        if zipf < 3.5:
+            rare_words[word] = zipf
+
+        # Only use valid words (>0) for average zipf to avoid skewing readability too much with OCR errors
+        if zipf > 0:
+            total_zipf += zipf
+            valid_words_count += 1
+
+    # Lexical Richness & Readability Scorer
+    # Type-Token Ratio
+    ttr = len(set(lemmas)) / len(lemmas) if len(lemmas) > 0 else 0.0
+
+    # Average Zipf frequency acts as a proxy for readability (higher = easier words used)
+    avg_zipf = (total_zipf / valid_words_count) if valid_words_count > 0 else 0.0
+
+    return {
+        "term_frequency": term_frequency,
+        "rare_words_and_jargon": rare_words,
+        "lexical_richness_ttr": round(ttr, 4),
+        "readability_avg_zipf": round(avg_zipf, 4)
+    }
+
 def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
     """
     Validates sense between teacher and student materials by calculating vector similarity
@@ -283,6 +341,10 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
     # 6. Compare mode: Analyze Topic Order
     topic_order = analyze_topic_order(teacher_data, student_data, nlp)
 
+    # 7. Compare mode: Evaluate Vocabulary
+    teacher_vocabulary = evaluate_vocabulary(teacher_data, nlp)
+    student_vocabulary = evaluate_vocabulary(student_data, nlp)
+
     response_data = {
         "metadata": {
             "teacher_source": teacher_pdf_path,
@@ -294,7 +356,9 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
         "student_redundancies": student_redundancies,
         "ner_consistency": ner_consistency,
         "sense_validation": sense_validation,
-        "topic_order": topic_order
+        "topic_order": topic_order,
+        "teacher_vocabulary": teacher_vocabulary,
+        "student_vocabulary": student_vocabulary
     }
 
     # Export to JSON

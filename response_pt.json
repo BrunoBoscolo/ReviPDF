@@ -1,0 +1,43 @@
+{
+    "metadata": {
+        "source_file": "test_document_pt.pdf",
+        "total_paragraphs": 3
+    },
+    "extracted_text": [
+        {
+            "page": 1,
+            "text": "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023."
+        },
+        {
+            "page": 1,
+            "text": "Nesta reunião, foram discutidos os novos avanços na área da tecnologia, inteligência artificial e os impact"
+        },
+        {
+            "page": 1,
+            "text": "Luiz Inácio Lula da Silva esteve em Brasília no dia 15 de novembro de 2023 para uma visita oficial."
+        }
+    ],
+    "named_entities": {
+        "PERSON": [
+            "Luiz Inácio Lula da Silva"
+        ],
+        "LOCATION": [
+            "Brasília",
+            "Brasil"
+        ],
+        "DATE": []
+    },
+    "redundancies": [
+        {
+            "score": 0.8743,
+            "para1": {
+                "page": 1,
+                "text": "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023."
+            },
+            "para2": {
+                "page": 1,
+                "text": "Luiz Inácio Lula da Silva esteve em Brasília no dia 15 de novembro de 2023 para uma visita oficial."
+            }
+        }
+    ]
+}

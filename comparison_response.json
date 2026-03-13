@@ -1,0 +1,151 @@
+{
+    "metadata": {
+        "teacher_source": "teacher_document.pdf",
+        "student_source": "student_document.pdf",
+        "teacher_total_paragraphs": 3,
+        "student_total_paragraphs": 3
+    },
+    "teacher_redundancies": [
+        {
+            "score": 0.9415,
+            "para1": {
+                "page": 1,
+                "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
+            },
+            "para2": {
+                "page": 1,
+                "text": "Jan Ingenhousz studied this process in 1779."
+            }
+        }
+    ],
+    "student_redundancies": [
+        {
+            "score": 0.903,
+            "para1": {
+                "page": 1,
+                "text": "It was discovered by Jan Ingenhousz."
+            },
+            "para2": {
+                "page": 1,
+                "text": "Jan Ingenhousz found it out."
+            }
+        }
+    ],
+    "ner_consistency": {
+        "PERSON": {
+            "in_both": [
+                "Jan Ingenhousz"
+            ],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        },
+        "LOCATION": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        },
+        "DATE": {
+            "in_both": [],
+            "missing_in_student": [
+                "1779"
+            ],
+            "missing_in_teacher": []
+        }
+    },
+    "sense_validation": [
+        {
+            "score": 0.9371,
+            "student_topic": {
+                "page": 1,
+                "text": "Plants use photosynthesis to transform sunlight into chemical energy."
+            },
+            "teacher_topic": {
+                "page": 1,
+                "text": "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical ener"
+            }
+        },
+        {
+            "score": 0.8836,
+            "student_topic": {
+                "page": 1,
+                "text": "It was discovered by Jan Ingenhousz."
+            },
+            "teacher_topic": {
+                "page": 1,
+                "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
+            }
+        }
+    ],
+    "topic_order": {
+        "match_ratio": 0.6,
+        "teacher_key_topics": [
+            "photosynthesis",
+            "process",
+            "plant",
+            "organism",
+            "energy",
+            "ener",
+            "process",
+            "jan",
+            "ingenhousz",
+            "jan",
+            "ingenhousz",
+            "process"
+        ],
+        "student_key_topics": [
+            "plant",
+            "photosynthesis",
+            "sunlight",
+            "energy",
+            "jan",
+            "ingenhousz",
+            "jan",
+            "ingenhousz"
+        ]
+    },
+    "teacher_vocabulary": {
+        "term_frequency": {
+            "photosynthesis": 1,
+            "process": 3,
+            "plant": 1,
+            "organism": 1,
+            "convert": 1,
+            "light": 1,
+            "energy": 1,
+            "chemical": 1,
+            "ener": 1,
+            "extensively": 1,
+            "study": 2,
+            "jan": 2,
+            "ingenhousz": 2
+        },
+        "rare_words_and_jargon": {
+            "ener": 1.84,
+            "photosynthesis": 3.03,
+            "ingenhousz": 0.0
+        },
+        "lexical_richness_ttr": 0.7222,
+        "readability_avg_zipf": 4.2292
+    },
+    "student_vocabulary": {
+        "term_frequency": {
+            "plant": 1,
+            "use": 1,
+            "photosynthesis": 1,
+            "transform": 1,
+            "sunlight": 1,
+            "chemical": 1,
+            "energy": 1,
+            "discover": 1,
+            "jan": 2,
+            "ingenhousz": 2,
+            "find": 1
+        },
+        "rare_words_and_jargon": {
+            "ingenhousz": 0.0,
+            "photosynthesis": 3.03
+        },
+        "lexical_richness_ttr": 0.8462,
+        "readability_avg_zipf": 4.618
+    }
+}

@@ -162,5 +162,13 @@ class TestPDFProcessor(unittest.TestCase):
         self.assertTrue(len(order["teacher_key_topics"]) > 0)
         self.assertTrue(len(order["student_key_topics"]) > 0)
 
+        # Vocabulary Evaluation
+        self.assertIn("teacher_vocabulary", data)
+        self.assertIn("student_vocabulary", data)
+        self.assertIn("term_frequency", data["teacher_vocabulary"])
+        self.assertIn("rare_words_and_jargon", data["teacher_vocabulary"])
+        self.assertIn("lexical_richness_ttr", data["teacher_vocabulary"])
+        self.assertIn("readability_avg_zipf", data["teacher_vocabulary"])
+
 if __name__ == "__main__":
     unittest.main()
