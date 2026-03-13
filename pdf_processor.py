@@ -144,6 +144,167 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
     return redundancies
 
 
+def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
+    """
+    Validates sense between teacher and student materials by calculating vector similarity
+    between their paragraphs. Checks if student topics convey the same meaning as teacher topics.
+    Returns a list of matched topics with their similarity scores.
+    """
+    matches = []
+
+    # Get doc embeddings
+    teacher_docs = []
+    for item in teacher_data:
+        doc = nlp(item["text"])
+        if doc.has_vector and len(doc.text.strip()) > 10:
+            teacher_docs.append({
+                "page": item["page"],
+                "text": item["text"],
+                "doc": doc
+            })
+
+    student_docs = []
+    for item in student_data:
+        doc = nlp(item["text"])
+        if doc.has_vector and len(doc.text.strip()) > 10:
+            student_docs.append({
+                "page": item["page"],
+                "text": item["text"],
+                "doc": doc
+            })
+
+    # Compare each student paragraph against teacher paragraphs to find matches
+    for s_doc in student_docs:
+        best_match = None
+        best_score = -1
+
+        for t_doc in teacher_docs:
+            score = s_doc["doc"].similarity(t_doc["doc"])
+            if score > best_score:
+                best_score = score
+                best_match = t_doc
+
+        if best_match and best_score >= threshold:
+            matches.append({
+                "score": round(best_score, 4),
+                "student_topic": {
+                    "page": s_doc["page"],
+                    "text": s_doc["text"]
+                },
+                "teacher_topic": {
+                    "page": best_match["page"],
+                    "text": best_match["text"]
+                }
+            })
+
+    return matches
+
+
+import difflib
+
+def analyze_topic_order(teacher_data, student_data, nlp):
+    """
+    Extracts sequential key nouns from teacher and student materials
+    to check if the topic order matches.
+    Returns the sequence of key nouns and a match ratio.
+    """
+    def extract_key_nouns(data):
+        nouns = []
+        for item in data:
+            doc = nlp(item["text"])
+            for token in doc:
+                if token.pos_ in ("NOUN", "PROPN") and not token.is_stop and len(token.text) > 2:
+                    nouns.append(token.lemma_.lower())
+        return nouns
+
+    teacher_nouns = extract_key_nouns(teacher_data)
+    student_nouns = extract_key_nouns(student_data)
+
+    matcher = difflib.SequenceMatcher(None, teacher_nouns, student_nouns)
+    match_ratio = matcher.ratio()
+
+    return {
+        "match_ratio": round(match_ratio, 4),
+        "teacher_key_topics": teacher_nouns,
+        "student_key_topics": student_nouns
+    }
+
+
+def check_ner_consistency(teacher_entities, student_entities):
+    """
+    Cross-checks named entities (Persons, Locations, Dates) from both documents.
+    Returns entities present in both, missing in student, and missing in teacher.
+    """
+    consistency = {}
+
+    for category in ["PERSON", "LOCATION", "DATE"]:
+        teacher_set = set(teacher_entities.get(category, []))
+        student_set = set(student_entities.get(category, []))
+
+        consistency[category] = {
+            "in_both": list(teacher_set.intersection(student_set)),
+            "missing_in_student": list(teacher_set - student_set),
+            "missing_in_teacher": list(student_set - teacher_set)
+        }
+
+    return consistency
+
+
+def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json="comparison_response.json"):
+    """
+    Main orchestration function for the new pedagogic mode.
+    Extracts text from both PDFs, runs semantic redundancy checks individually,
+    and then compares them for sense validity, topic order, and NER consistency.
+    """
+    import json
+
+    # 1. Extract text and pages from both PDFs
+    teacher_data = extract_text_from_pdf(teacher_pdf_path)
+    student_data = extract_text_from_pdf(student_pdf_path)
+
+    # We combine both initially just to ensure language is detected accurately across the board
+    # Or, preferably, detect based on teacher material.
+    nlp = detect_language_and_load_model(teacher_data)
+
+    # 2. Extract Named Entities individually
+    teacher_entities = extract_named_entities(teacher_data, nlp)
+    student_entities = extract_named_entities(student_data, nlp)
+
+    # 3. Detect internal semantic redundancies individually
+    teacher_redundancies = detect_semantic_redundancy(teacher_data, nlp)
+    student_redundancies = detect_semantic_redundancy(student_data, nlp)
+
+    # 4. Compare mode: NER Consistency
+    ner_consistency = check_ner_consistency(teacher_entities, student_entities)
+
+    # 5. Compare mode: Validate Sense (Professor vs. Aluno)
+    sense_validation = validate_sense(teacher_data, student_data, nlp)
+
+    # 6. Compare mode: Analyze Topic Order
+    topic_order = analyze_topic_order(teacher_data, student_data, nlp)
+
+    response_data = {
+        "metadata": {
+            "teacher_source": teacher_pdf_path,
+            "student_source": student_pdf_path,
+            "teacher_total_paragraphs": len(teacher_data),
+            "student_total_paragraphs": len(student_data)
+        },
+        "teacher_redundancies": teacher_redundancies,
+        "student_redundancies": student_redundancies,
+        "ner_consistency": ner_consistency,
+        "sense_validation": sense_validation,
+        "topic_order": topic_order
+    }
+
+    # Export to JSON
+    with open(output_json, 'w', encoding='utf-8') as f:
+        json.dump(response_data, f, indent=4, ensure_ascii=False)
+
+    print(f"Pedagogic comparison data successfully exported to {output_json}")
+    return response_data
+
+
 def process_pdf_and_export_json(filepath, output_json="response.json"):
     """
     Main pipeline function that processes a PDF and exports the extracted data,
