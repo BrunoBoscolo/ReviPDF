@@ -69,12 +69,12 @@ class TestPDFProcessor(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """
-        Cleans up the generated files after all tests finish.
+        Cleans up the generated PDF files after all tests finish, but keeps the responses.
         """
         files_to_remove = [
-            cls.test_pdf_pt, cls.test_json_pt,
-            cls.test_pdf_en, cls.test_json_en,
-            cls.test_teacher_pdf, cls.test_student_pdf, cls.test_comparison_json
+            cls.test_pdf_pt,
+            cls.test_pdf_en,
+            cls.test_teacher_pdf, cls.test_student_pdf
         ]
         for f in files_to_remove:
             if os.path.exists(f):
