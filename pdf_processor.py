@@ -122,6 +122,7 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
         # We only consider paragraphs that have vectors and aren't empty
         if doc.has_vector and len(doc.text.strip()) > 10:
             docs.append({
+                "id": item.get("id"),
                 "page": item["page"],
                 "text": item["text"],
                 "doc": doc
@@ -140,10 +141,12 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
                 redundancies.append({
                     "score": round(similarity, 4),
                     "para1": {
+                        "id": docs[i]["id"],
                         "page": docs[i]["page"],
                         "text": docs[i]["text"]
                     },
                     "para2": {
+                        "id": docs[j]["id"],
                         "page": docs[j]["page"],
                         "text": docs[j]["text"]
                     }
@@ -224,6 +227,7 @@ def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
         doc = nlp(item["text"])
         if doc.has_vector and len(doc.text.strip()) > 10:
             teacher_docs.append({
+                "id": item.get("id"),
                 "page": item["page"],
                 "text": item["text"],
                 "doc": doc
@@ -234,6 +238,7 @@ def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
         doc = nlp(item["text"])
         if doc.has_vector and len(doc.text.strip()) > 10:
             student_docs.append({
+                "id": item.get("id"),
                 "page": item["page"],
                 "text": item["text"],
                 "doc": doc
@@ -254,10 +259,12 @@ def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
             matches.append({
                 "score": round(best_score, 4),
                 "student_topic": {
+                    "id": s_doc["id"],
                     "page": s_doc["page"],
                     "text": s_doc["text"]
                 },
                 "teacher_topic": {
+                    "id": best_match["id"],
                     "page": best_match["page"],
                     "text": best_match["text"]
                 }
@@ -653,9 +660,17 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
     compares them, and exports a JSON report.
     """
     import json
+    import hashlib
 
     # 1. Get parsed Chapters and Aulas (either extracted fresh or from cache)
     chapters = extract_and_cache_pdf(filepath)
+
+    # Calculate hash to find the root cache directory
+    hasher = hashlib.md5()
+    with open(filepath, 'rb') as f:
+        buf = f.read()
+        hasher.update(buf)
+    pdf_hash = hasher.hexdigest()
 
     # 2. Collect all extracted text to detect language
     # We flatten all sections from all aulas from all chapters to pass to language detection
@@ -684,6 +699,43 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
             aula_report = compare_aula_sections(aula, nlp)
             chapter_report["aulas"].append(aula_report)
             total_aulas += 1
+
+            # Save separate JSONs for the NLP processes inside the chapter/aula directory
+            aula_dir = os.path.join("processed_pdfs", pdf_hash, f"Chapter_{chapter['number']}", f"Aula_{aula['number']}")
+            os.makedirs(aula_dir, exist_ok=True)
+
+            topic_order = {
+                "guia_vs_conteudo": aula_report.get("guia_vs_conteudo", {}).get("topic_order", {}),
+                "guia_vs_atividades": aula_report.get("guia_vs_atividades", {}).get("topic_order", {}),
+                "conteudo_vs_atividades": aula_report.get("conteudo_vs_atividades", {}).get("topic_order", {})
+            }
+            with open(os.path.join(aula_dir, "topic_order.json"), 'w', encoding='utf-8') as f:
+                json.dump(topic_order, f, indent=4, ensure_ascii=False)
+
+            ner_consistency = {
+                "guia_vs_conteudo": aula_report.get("guia_vs_conteudo", {}).get("ner_consistency", {}),
+                "guia_vs_atividades": aula_report.get("guia_vs_atividades", {}).get("ner_consistency", {}),
+                "conteudo_vs_atividades": aula_report.get("conteudo_vs_atividades", {}).get("ner_consistency", {})
+            }
+            with open(os.path.join(aula_dir, "ner_consistency.json"), 'w', encoding='utf-8') as f:
+                json.dump(ner_consistency, f, indent=4, ensure_ascii=False)
+
+            redundancies = {
+                "guia_do_professor": aula_report.get("section_metrics", {}).get("guia_do_professor", {}).get("redundancies", []),
+                "conteudo_do_aluno": aula_report.get("section_metrics", {}).get("conteudo_do_aluno", {}).get("redundancies", []),
+                "atividades_do_aluno": aula_report.get("section_metrics", {}).get("atividades_do_aluno", {}).get("redundancies", [])
+            }
+            with open(os.path.join(aula_dir, "redundancies.json"), 'w', encoding='utf-8') as f:
+                json.dump(redundancies, f, indent=4, ensure_ascii=False)
+
+            vocabulary = {
+                "guia_do_professor": aula_report.get("section_metrics", {}).get("guia_do_professor", {}).get("vocabulary", {}),
+                "conteudo_do_aluno": aula_report.get("section_metrics", {}).get("conteudo_do_aluno", {}).get("vocabulary", {}),
+                "atividades_do_aluno": aula_report.get("section_metrics", {}).get("atividades_do_aluno", {}).get("vocabulary", {})
+            }
+            with open(os.path.join(aula_dir, "vocabulary.json"), 'w', encoding='utf-8') as f:
+                json.dump(vocabulary, f, indent=4, ensure_ascii=False)
+
         aulas_reports.append(chapter_report)
 
     # Compile the final response payload
