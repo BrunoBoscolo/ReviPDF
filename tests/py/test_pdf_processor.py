@@ -253,7 +253,8 @@ class TestPDFProcessor(unittest.TestCase):
 
         # Basic spot check of contents
         guia_vs_conteudo = aula_report["guia_vs_conteudo"]
-        self.assertIn("sense_validation", guia_vs_conteudo)
+        self.assertNotIn("sense_validation", guia_vs_conteudo) # No longer validating paragraphs across sections
+        self.assertIn("topic_order", guia_vs_conteudo)
         self.assertIn("ner_consistency", guia_vs_conteudo)
 
     def test_pipeline_designer_instructions(self):
