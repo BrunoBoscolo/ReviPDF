@@ -2,6 +2,8 @@ import fitz  # PyMuPDF
 import spacy
 from langdetect import detect, DetectorFactory
 import re
+import os
+import hashlib
 
 # Set seed for deterministic language detection
 DetectorFactory.seed = 0
@@ -415,23 +417,40 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
 
 def parse_aulas(extracted_data):
     """
-    Parses extracted text data into 'aulas' and their internal sections:
+    Parses extracted text data into chapters, 'aulas', and their internal sections:
     - GUIA DO PROFESSOR
     - CONTEÚDO DO LIVRO DO ALUNO
     - ATIVIDADES DO ALUNO
     """
     # Tolerant regexes to handle formatting, typos, and numbering variations
+    chapter_re = re.compile(r"(?i)^\s*(?:C[Aa][Pp][ÍiI][Tt][Uu][Ll][Oo]|C[Hh][Aa][Pp][Tt][Ee][Rr])\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
     aula_re = re.compile(r"(?i)^\s*A[uU][lL][aA]\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
     sec1_re = re.compile(r"(?i)^\s*(?:1\.?\s*)?GUIA\s+D[OE]\s+PROFESS[OÓ]R\s*$")
     sec2_re = re.compile(r"(?i)^\s*(?:2\.?\s*)?CONTE[ÚU]DO\s+D[OE]\s+LIVRO\s+D[OE]\s+ALUNO\s*$")
     sec3_re = re.compile(r"(?i)^\s*(?:3\.?\s*)?ATIVIDADES?\s+D[OE]\s+ALUNO\s*$")
 
-    aulas = []
+    chapters = []
+    current_chapter = None
     current_aula = None
     current_section = None
 
     for item in extracted_data:
         text = item["text"].strip()
+
+        # Check for Chapter header
+        chapter_match = chapter_re.match(text)
+        if chapter_match:
+            number = chapter_match.group(1).zfill(2)
+            theme = chapter_match.group(2).strip()
+            current_chapter = {
+                "number": number,
+                "theme": theme,
+                "aulas": []
+            }
+            chapters.append(current_chapter)
+            current_aula = None
+            current_section = None
+            continue
 
         # Check for Aula header
         aula_match = aula_re.match(text)
@@ -445,7 +464,17 @@ def parse_aulas(extracted_data):
                 "conteudo_do_aluno": [],
                 "atividades_do_aluno": []
             }
-            aulas.append(current_aula)
+
+            # If an Aula is found before any Chapter, put it in a default Chapter 00
+            if not current_chapter:
+                current_chapter = {
+                    "number": "00",
+                    "theme": "Default Chapter",
+                    "aulas": []
+                }
+                chapters.append(current_chapter)
+
+            current_chapter["aulas"].append(current_aula)
             current_section = None
             continue
 
@@ -467,7 +496,7 @@ def parse_aulas(extracted_data):
         if current_section:
             current_aula[current_section].append(item)
 
-    return aulas
+    return chapters
 
 
 def compare_aula_sections(aula, nlp):
@@ -546,39 +575,110 @@ def compare_aula_sections(aula, nlp):
     return report
 
 
-def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
+def extract_and_cache_pdf(filepath):
     """
-    Main orchestration function for Aula processing.
-    Extracts text, parses aulas and their sections, compares them,
-    and exports a JSON report.
+    Computes MD5 hash of PDF, creates caching directory structure,
+    extracts/parses texts if not cached, or loads from cache if it exists.
     """
     import json
 
-    # 1. Extract text and pages
+    # 1. Compute MD5 hash of the file
+    hasher = hashlib.md5()
+    with open(filepath, 'rb') as f:
+        buf = f.read()
+        hasher.update(buf)
+    pdf_hash = hasher.hexdigest()
+
+    base_dir = os.path.join("processed_pdfs", pdf_hash)
+
+    # If cache exists and looks populated (has chapters.json), just load it
+    chapters_json_path = os.path.join(base_dir, "chapters.json")
+    if os.path.exists(chapters_json_path):
+        print(f"Loading cached extracted data for {filepath} from {base_dir}")
+        with open(chapters_json_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    # Cache doesn't exist or is incomplete, extract from scratch
+    print(f"Extracting data for {filepath} (Hash: {pdf_hash})")
     extracted_data = extract_text_from_pdf(filepath)
+    chapters = parse_aulas(extracted_data)
 
-    # 2. Detect language and load appropriate spaCy model
-    if extracted_data:
-        nlp = detect_language_and_load_model(extracted_data)
+    # Create directory structure and save individual files
+    os.makedirs(base_dir, exist_ok=True)
+
+    for chapter in chapters:
+        chapter_dir = os.path.join(base_dir, f"Chapter_{chapter['number']}")
+        os.makedirs(chapter_dir, exist_ok=True)
+
+        for aula in chapter["aulas"]:
+            aula_dir = os.path.join(chapter_dir, f"Aula_{aula['number']}")
+            os.makedirs(aula_dir, exist_ok=True)
+
+            # Save sections to separate JSON files
+            with open(os.path.join(aula_dir, "teacher.json"), 'w', encoding='utf-8') as f:
+                json.dump(aula["guia_do_professor"], f, indent=4, ensure_ascii=False)
+
+            with open(os.path.join(aula_dir, "student.json"), 'w', encoding='utf-8') as f:
+                json.dump(aula["conteudo_do_aluno"], f, indent=4, ensure_ascii=False)
+
+            with open(os.path.join(aula_dir, "activities.json"), 'w', encoding='utf-8') as f:
+                json.dump(aula["atividades_do_aluno"], f, indent=4, ensure_ascii=False)
+
+    # Save the master chapters structure
+    with open(chapters_json_path, 'w', encoding='utf-8') as f:
+        json.dump(chapters, f, indent=4, ensure_ascii=False)
+
+    return chapters
+
+
+def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
+    """
+    Main orchestration function for Aula processing.
+    Uses cached structure or extracts texts, parses chapters/aulas and their sections,
+    compares them, and exports a JSON report.
+    """
+    import json
+
+    # 1. Get parsed Chapters and Aulas (either extracted fresh or from cache)
+    chapters = extract_and_cache_pdf(filepath)
+
+    # 2. Collect all extracted text to detect language
+    # We flatten all sections from all aulas from all chapters to pass to language detection
+    all_extracted_texts = []
+    for chapter in chapters:
+        for aula in chapter["aulas"]:
+            all_extracted_texts.extend(aula.get("guia_do_professor", []))
+            all_extracted_texts.extend(aula.get("conteudo_do_aluno", []))
+            all_extracted_texts.extend(aula.get("atividades_do_aluno", []))
+
+    # 3. Detect language and load appropriate spaCy model
+    if all_extracted_texts:
+        nlp = detect_language_and_load_model(all_extracted_texts)
     else:
-        raise ValueError("No text extracted from PDF.")
+        raise ValueError("No text extracted from PDF to detect language.")
 
-    # 3. Parse Aulas and sections
-    aulas = parse_aulas(extracted_data)
-
-    # 4. Process and compare sections for each aula
+    # 4. Process and compare sections for each aula within each chapter
     aulas_reports = []
-    for aula in aulas:
-        aula_report = compare_aula_sections(aula, nlp)
-        aulas_reports.append(aula_report)
+    total_aulas = 0
+    for chapter in chapters:
+        chapter_report = {
+            "chapter_info": f"Chapter {chapter['number']} - {chapter['theme']}",
+            "aulas": []
+        }
+        for aula in chapter["aulas"]:
+            aula_report = compare_aula_sections(aula, nlp)
+            chapter_report["aulas"].append(aula_report)
+            total_aulas += 1
+        aulas_reports.append(chapter_report)
 
     # Compile the final response payload
     response_data = {
         "metadata": {
             "source_file": filepath,
-            "total_aulas_parsed": len(aulas)
+            "total_chapters_parsed": len(chapters),
+            "total_aulas_parsed": total_aulas
         },
-        "aulas_analysis": aulas_reports
+        "chapters_analysis": aulas_reports
     }
 
     # Export to JSON
