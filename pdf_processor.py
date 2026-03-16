@@ -1,6 +1,7 @@
 import fitz  # PyMuPDF
 import spacy
 from langdetect import detect, DetectorFactory
+import re
 
 # Set seed for deterministic language detection
 DetectorFactory.seed = 0
@@ -404,4 +405,183 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
     print(f"Data successfully exported to {output_json}")
+    return response_data
+
+
+def parse_aulas(extracted_data):
+    """
+    Parses extracted text data into 'aulas' and their internal sections:
+    - GUIA DO PROFESSOR
+    - CONTEÚDO DO LIVRO DO ALUNO
+    - ATIVIDADES DO ALUNO
+    """
+    # Tolerant regexes to handle formatting, typos, and numbering variations
+    aula_re = re.compile(r"(?i)^\s*A[uU][lL][aA]\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
+    sec1_re = re.compile(r"(?i)^\s*(?:1\.?\s*)?GUIA\s+D[OE]\s+PROFESS[OÓ]R\s*$")
+    sec2_re = re.compile(r"(?i)^\s*(?:2\.?\s*)?CONTE[ÚU]DO\s+D[OE]\s+LIVRO\s+D[OE]\s+ALUNO\s*$")
+    sec3_re = re.compile(r"(?i)^\s*(?:3\.?\s*)?ATIVIDADES?\s+D[OE]\s+ALUNO\s*$")
+
+    aulas = []
+    current_aula = None
+    current_section = None
+
+    for item in extracted_data:
+        text = item["text"].strip()
+
+        # Check for Aula header
+        aula_match = aula_re.match(text)
+        if aula_match:
+            number = aula_match.group(1).zfill(2) # normalize to 01, 02...
+            theme = aula_match.group(2).strip()
+            current_aula = {
+                "number": number,
+                "theme": theme,
+                "guia_do_professor": [],
+                "conteudo_do_aluno": [],
+                "atividades_do_aluno": []
+            }
+            aulas.append(current_aula)
+            current_section = None
+            continue
+
+        if not current_aula:
+            continue # ignore text before the first Aula
+
+        # Check for Section headers
+        if sec1_re.match(text):
+            current_section = "guia_do_professor"
+            continue
+        elif sec2_re.match(text):
+            current_section = "conteudo_do_aluno"
+            continue
+        elif sec3_re.match(text):
+            current_section = "atividades_do_aluno"
+            continue
+
+        # Add content to current section
+        if current_section:
+            current_aula[current_section].append(item)
+
+    return aulas
+
+
+def compare_aula_sections(aula, nlp):
+    """
+    Compares the three internal sections of an Aula:
+    - Guia do Professor vs Conteúdo do Aluno
+    - Guia do Professor vs Atividades do Aluno
+    - Conteúdo do Aluno vs Atividades do Aluno
+    """
+    guia = aula["guia_do_professor"]
+    conteudo = aula["conteudo_do_aluno"]
+    atividades = aula["atividades_do_aluno"]
+
+    report = {
+        "aula_info": f"Aula {aula['number']} - {aula['theme']}",
+        "guia_vs_conteudo": {},
+        "guia_vs_atividades": {},
+        "conteudo_vs_atividades": {},
+        "section_metrics": {
+            "guia_do_professor": {},
+            "conteudo_do_aluno": {},
+            "atividades_do_aluno": {}
+        }
+    }
+
+    # Evaluate individual sections
+    if guia:
+        report["section_metrics"]["guia_do_professor"] = {
+            "entities": extract_named_entities(guia, nlp),
+            "redundancies": detect_semantic_redundancy(guia, nlp),
+            "vocabulary": evaluate_vocabulary(guia, nlp)
+        }
+    if conteudo:
+        report["section_metrics"]["conteudo_do_aluno"] = {
+            "entities": extract_named_entities(conteudo, nlp),
+            "redundancies": detect_semantic_redundancy(conteudo, nlp),
+            "vocabulary": evaluate_vocabulary(conteudo, nlp)
+        }
+    if atividades:
+        report["section_metrics"]["atividades_do_aluno"] = {
+            "entities": extract_named_entities(atividades, nlp),
+            "redundancies": detect_semantic_redundancy(atividades, nlp),
+            "vocabulary": evaluate_vocabulary(atividades, nlp)
+        }
+
+    # Compare Guia vs Conteudo
+    if guia and conteudo:
+        guia_ents = report["section_metrics"]["guia_do_professor"]["entities"]
+        conteudo_ents = report["section_metrics"]["conteudo_do_aluno"]["entities"]
+
+        report["guia_vs_conteudo"] = {
+            "sense_validation": validate_sense(guia, conteudo, nlp),
+            "topic_order": analyze_topic_order(guia, conteudo, nlp),
+            "ner_consistency": check_ner_consistency(guia_ents, conteudo_ents)
+        }
+
+    # Compare Guia vs Atividades
+    if guia and atividades:
+        guia_ents = report["section_metrics"]["guia_do_professor"]["entities"]
+        atividades_ents = report["section_metrics"]["atividades_do_aluno"]["entities"]
+
+        report["guia_vs_atividades"] = {
+            "sense_validation": validate_sense(guia, atividades, nlp),
+            "topic_order": analyze_topic_order(guia, atividades, nlp),
+            "ner_consistency": check_ner_consistency(guia_ents, atividades_ents)
+        }
+
+    # Compare Conteudo vs Atividades
+    if conteudo and atividades:
+        conteudo_ents = report["section_metrics"]["conteudo_do_aluno"]["entities"]
+        atividades_ents = report["section_metrics"]["atividades_do_aluno"]["entities"]
+
+        report["conteudo_vs_atividades"] = {
+            "sense_validation": validate_sense(conteudo, atividades, nlp),
+            "topic_order": analyze_topic_order(conteudo, atividades, nlp),
+            "ner_consistency": check_ner_consistency(conteudo_ents, atividades_ents)
+        }
+
+    return report
+
+
+def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
+    """
+    Main orchestration function for Aula processing.
+    Extracts text, parses aulas and their sections, compares them,
+    and exports a JSON report.
+    """
+    import json
+
+    # 1. Extract text and pages
+    extracted_data = extract_text_from_pdf(filepath)
+
+    # 2. Detect language and load appropriate spaCy model
+    if extracted_data:
+        nlp = detect_language_and_load_model(extracted_data)
+    else:
+        raise ValueError("No text extracted from PDF.")
+
+    # 3. Parse Aulas and sections
+    aulas = parse_aulas(extracted_data)
+
+    # 4. Process and compare sections for each aula
+    aulas_reports = []
+    for aula in aulas:
+        aula_report = compare_aula_sections(aula, nlp)
+        aulas_reports.append(aula_report)
+
+    # Compile the final response payload
+    response_data = {
+        "metadata": {
+            "source_file": filepath,
+            "total_aulas_parsed": len(aulas)
+        },
+        "aulas_analysis": aulas_reports
+    }
+
+    # Export to JSON
+    with open(output_json, 'w', encoding='utf-8') as f:
+        json.dump(response_data, f, indent=4, ensure_ascii=False)
+
+    print(f"Aula comparison data successfully exported to {output_json}")
     return response_data
