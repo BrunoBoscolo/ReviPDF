@@ -126,11 +126,31 @@ def extract_named_entities(extracted_data, nlp):
             return None
 
         final_text = " ".join(cleaned_words)
+        clean_text = final_text.strip(".,;:?!()\"'")
 
         # Re-evaluate length and casing on the final cleaned text
         if ent.label_ in person_labels.union(location_labels):
-            if final_text.islower() or len(final_text.strip(".,;:?!()\"'")) <= 1:
+            # Reject entities with digits (often curriculum codes like EF02LP06)
+            if any(c.isdigit() for c in clean_text):
                 return None
+
+            # Reject if it contains hyphens (often syllables like Pa-to, Bu-le)
+            if '-' in clean_text:
+                return None
+
+            # Reject very short entities (e.g. Pê, Bê, Tê, Dê)
+            if final_text.islower() or len(clean_text) <= 2:
+                return None
+
+            # Reject single-word entities that are actually common nouns, verbs, or adjectives
+            # when evaluated in lowercase (e.g., 'Bule', 'Percebermos', 'Pipa').
+            # Educational texts often capitalize random words for emphasis.
+            if len(cleaned_words) == 1:
+                lower_doc = nlp(clean_text.lower())
+                if lower_doc and len(lower_doc) > 0:
+                    lower_tag = lower_doc[0].pos_
+                    if lower_tag in ["NOUN", "VERB", "ADJ", "ADV", "PRON", "ADP", "INTJ", "SCONJ", "CCONJ", "DET"]:
+                        return None
 
         return final_text
 
