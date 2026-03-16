@@ -31,6 +31,9 @@ class TestPDFProcessor(unittest.TestCase):
         cls.test_aula_pdf = "aula_document.pdf"
         cls.test_aula_json = "aulas_report.json"
 
+        cls.test_designer_pdf = "test_designer.pdf"
+        cls.test_json_designer = "response_designer.json"
+
         paragraphs_pt = [
             "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023.",
             "Nesta reunião, foram discutidos os novos avanços na área da tecnologia, inteligência artificial e os impactos ambientais na Amazônia.",
@@ -73,6 +76,15 @@ class TestPDFProcessor(unittest.TestCase):
         ]
         cls.create_sample_pdf(cls.test_aula_pdf, aula_paragraphs)
 
+        designer_paragraphs = [
+            "This is normal text.",
+            "Instrução Visual: Make this bold\nAnd this is some other instruction.",
+            "More normal text.",
+            "[INSTRUÇÃO PARA O DIAGRAMADOR] Place an image here.",
+            "The final normal text."
+        ]
+        cls.create_sample_pdf(cls.test_designer_pdf, designer_paragraphs)
+
     @classmethod
     def create_sample_pdf(cls, filename, paragraphs):
         c = canvas.Canvas(filename, pagesize=letter)
@@ -92,7 +104,8 @@ class TestPDFProcessor(unittest.TestCase):
             cls.test_pdf_pt,
             cls.test_pdf_en,
             cls.test_teacher_pdf, cls.test_student_pdf,
-            cls.test_aula_pdf
+            cls.test_aula_pdf,
+            cls.test_designer_pdf
         ]
         for f in files_to_remove:
             if os.path.exists(f):
@@ -218,6 +231,31 @@ class TestPDFProcessor(unittest.TestCase):
         guia_vs_conteudo = aula_report["guia_vs_conteudo"]
         self.assertIn("sense_validation", guia_vs_conteudo)
         self.assertIn("ner_consistency", guia_vs_conteudo)
+
+    def test_pipeline_designer_instructions(self):
+        # Run the processor
+        result = process_pdf_and_export_json(self.test_designer_pdf, self.test_json_designer)
+
+        # Verify JSON file was created
+        self.assertTrue(os.path.exists(self.test_json_designer))
+
+        with open(self.test_json_designer, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Verify metadata (total_paragraphs should be 3, since 2 were entirely filtered out)
+        self.assertEqual(data["metadata"]["source_file"], self.test_designer_pdf)
+        self.assertEqual(data["metadata"]["total_paragraphs"], 3)
+
+        # Verify the content
+        extracted_texts = [item["text"] for item in data["extracted_text"]]
+        self.assertIn("This is normal text.", extracted_texts)
+        self.assertIn("More normal text.", extracted_texts)
+        self.assertIn("The final normal text.", extracted_texts)
+
+        # Verify instructions were completely removed
+        for text in extracted_texts:
+            self.assertNotIn("Instrução Visual", text)
+            self.assertNotIn("DIAGRAMADOR", text)
 
 if __name__ == "__main__":
     unittest.main()
