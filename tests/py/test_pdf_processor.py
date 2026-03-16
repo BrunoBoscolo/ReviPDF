@@ -105,7 +105,8 @@ class TestPDFProcessor(unittest.TestCase):
             cls.test_pdf_en,
             cls.test_teacher_pdf, cls.test_student_pdf,
             cls.test_aula_pdf,
-            cls.test_designer_pdf
+            cls.test_designer_pdf,
+            cls.test_json_designer
         ]
         for f in files_to_remove:
             if os.path.exists(f):
