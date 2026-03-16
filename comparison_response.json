@@ -142,8 +142,8 @@
             "find": 1
         },
         "rare_words_and_jargon": {
-            "ingenhousz": 0.0,
-            "photosynthesis": 3.03
+            "photosynthesis": 3.03,
+            "ingenhousz": 0.0
         },
         "lexical_richness_ttr": 0.8462,
         "readability_avg_zipf": 4.618

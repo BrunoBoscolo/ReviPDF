@@ -6,7 +6,7 @@ import sys
 # Add parent directory to path so we can import pdf_processor
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from pdf_processor import process_pdf_and_export_json, compare_pedagogic_materials
+from pdf_processor import process_pdf_and_export_json, compare_pedagogic_materials, process_aulas_from_pdf
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -27,6 +27,9 @@ class TestPDFProcessor(unittest.TestCase):
         cls.test_teacher_pdf = "teacher_document.pdf"
         cls.test_student_pdf = "student_document.pdf"
         cls.test_comparison_json = "comparison_response.json"
+
+        cls.test_aula_pdf = "aula_document.pdf"
+        cls.test_aula_json = "aulas_report.json"
 
         paragraphs_pt = [
             "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023.",
@@ -56,6 +59,20 @@ class TestPDFProcessor(unittest.TestCase):
         ]
         cls.create_sample_pdf(cls.test_student_pdf, student_paragraphs)
 
+        aula_paragraphs = [
+            "Aula 01 - Introdução à Fotossíntese",
+            "1. GUIA DO PROFESSOR",
+            "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
+            "This process was first extensively studied by Jan Ingenhousz in 1779.",
+            "2. CONTEÚDO DO LIVRO DO ALUNO",
+            "Plants use photosynthesis to transform sunlight into chemical energy.",
+            "It was discovered by Jan Ingenhousz.",
+            "3. ATIVIDADES DO ALUNO",
+            "What is photosynthesis? Who discovered it?",
+            "Explain the process of photosynthesis."
+        ]
+        cls.create_sample_pdf(cls.test_aula_pdf, aula_paragraphs)
+
     @classmethod
     def create_sample_pdf(cls, filename, paragraphs):
         c = canvas.Canvas(filename, pagesize=letter)
@@ -74,7 +91,8 @@ class TestPDFProcessor(unittest.TestCase):
         files_to_remove = [
             cls.test_pdf_pt,
             cls.test_pdf_en,
-            cls.test_teacher_pdf, cls.test_student_pdf
+            cls.test_teacher_pdf, cls.test_student_pdf,
+            cls.test_aula_pdf
         ]
         for f in files_to_remove:
             if os.path.exists(f):
@@ -169,6 +187,37 @@ class TestPDFProcessor(unittest.TestCase):
         self.assertIn("rare_words_and_jargon", data["teacher_vocabulary"])
         self.assertIn("lexical_richness_ttr", data["teacher_vocabulary"])
         self.assertIn("readability_avg_zipf", data["teacher_vocabulary"])
+
+    def test_process_aulas_from_pdf(self):
+        result = process_aulas_from_pdf(self.test_aula_pdf, self.test_aula_json)
+
+        self.assertTrue(os.path.exists(self.test_aula_json))
+
+        with open(self.test_aula_json, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        self.assertEqual(data["metadata"]["source_file"], self.test_aula_pdf)
+        self.assertEqual(data["metadata"]["total_aulas_parsed"], 1)
+
+        self.assertEqual(len(data["aulas_analysis"]), 1)
+        aula_report = data["aulas_analysis"][0]
+
+        self.assertEqual(aula_report["aula_info"], "Aula 01 - Introdução à Fotossíntese")
+
+        # Check section metrics exist
+        self.assertIn("guia_do_professor", aula_report["section_metrics"])
+        self.assertIn("conteudo_do_aluno", aula_report["section_metrics"])
+        self.assertIn("atividades_do_aluno", aula_report["section_metrics"])
+
+        # Check that comparison objects are populated
+        self.assertIn("guia_vs_conteudo", aula_report)
+        self.assertIn("guia_vs_atividades", aula_report)
+        self.assertIn("conteudo_vs_atividades", aula_report)
+
+        # Basic spot check of contents
+        guia_vs_conteudo = aula_report["guia_vs_conteudo"]
+        self.assertIn("sense_validation", guia_vs_conteudo)
+        self.assertIn("ner_consistency", guia_vs_conteudo)
 
 if __name__ == "__main__":
     unittest.main()
