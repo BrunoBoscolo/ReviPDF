@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+
+# Ignorar binários do PyInstaller e Tauri
+src-tauri/binaries/*.exe
+dist/
+build/
+*.spec

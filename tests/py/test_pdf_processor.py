@@ -6,7 +6,7 @@ import sys
 # Add parent directory to path so we can import pdf_processor
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from pdf_processor import process_pdf_and_export_json, compare_pedagogic_materials
+from pdf_processor import process_pdf_and_export_json, compare_pedagogic_materials, process_aulas_from_pdf
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -27,6 +27,16 @@ class TestPDFProcessor(unittest.TestCase):
         cls.test_teacher_pdf = "teacher_document.pdf"
         cls.test_student_pdf = "student_document.pdf"
         cls.test_comparison_json = "comparison_response.json"
+
+        cls.test_aula_pdf = "aula_document.pdf"
+        cls.test_aula_json = "aulas_report.json"
+
+        cls.test_chapter_aula_pdf = "chapter_aula_document.pdf"
+
+        cls.test_designer_pdf = "test_designer.pdf"
+        cls.test_json_designer = "response_designer.json"
+
+        cls.test_newline_pdf = "test_newline.pdf"
 
         paragraphs_pt = [
             "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023.",
@@ -56,6 +66,61 @@ class TestPDFProcessor(unittest.TestCase):
         ]
         cls.create_sample_pdf(cls.test_student_pdf, student_paragraphs)
 
+        aula_paragraphs = [
+            "Aula 01 - Introdução à Fotossíntese",
+            "1. GUIA DO PROFESSOR",
+            "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
+            "This process was first extensively studied by Jan Ingenhousz in 1779.",
+            "2. CONTEÚDO DO LIVRO DO ALUNO",
+            "Plants use photosynthesis to transform sunlight into chemical energy.",
+            "It was discovered by Jan Ingenhousz.",
+            "3. ATIVIDADES DO ALUNO",
+            "What is photosynthesis? Who discovered it?",
+            "Explain the process of photosynthesis."
+        ]
+        cls.create_sample_pdf(cls.test_aula_pdf, aula_paragraphs)
+
+        chapter_aula_paragraphs = [
+            "Chapter 1 - Plant Biology",
+            "Aula 01 - Introdução à Fotossíntese",
+            "1. GUIA DO PROFESSOR",
+            "Photosynthesis is a process.",
+            "Capítulo 2 - Animal Biology",
+            "Aula 02 - Mammals",
+            "1. GUIA DO PROFESSOR",
+            "Mammals are animals."
+        ]
+        cls.create_sample_pdf(cls.test_chapter_aula_pdf, chapter_aula_paragraphs)
+
+        designer_paragraphs = [
+            "This is normal text.",
+            "Instrução Visual: Make this bold\nAnd this is some other instruction.",
+            "More normal text.",
+            "[INSTRUÇÃO PARA O DIAGRAMADOR] Place an image here.",
+            "The final normal text."
+        ]
+        cls.create_sample_pdf(cls.test_designer_pdf, designer_paragraphs)
+
+        newline_paragraphs = [
+            "This paragraph has\na newline character.",
+            "This one\nalso has\nnewlines."
+        ]
+        cls.create_sample_pdf_with_newlines(cls.test_newline_pdf, newline_paragraphs)
+
+    @classmethod
+    def create_sample_pdf_with_newlines(cls, filename, paragraphs):
+        c = canvas.Canvas(filename, pagesize=letter)
+        width, height = letter
+        y_position = height - 50
+        for text_content in paragraphs:
+            text_obj = c.beginText(50, y_position)
+            text_obj.textLines(text_content)
+            c.drawText(text_obj)
+            # Adjust y_position based on number of lines
+            lines = text_content.count('\n') + 1
+            y_position -= 40 * lines
+        c.save()
+
     @classmethod
     def create_sample_pdf(cls, filename, paragraphs):
         c = canvas.Canvas(filename, pagesize=letter)
@@ -71,14 +136,24 @@ class TestPDFProcessor(unittest.TestCase):
         """
         Cleans up the generated PDF files after all tests finish, but keeps the responses.
         """
+        import shutil
         files_to_remove = [
             cls.test_pdf_pt,
             cls.test_pdf_en,
-            cls.test_teacher_pdf, cls.test_student_pdf
+            cls.test_teacher_pdf, cls.test_student_pdf,
+            cls.test_aula_pdf,
+            cls.test_chapter_aula_pdf,
+            cls.test_designer_pdf,
+            cls.test_json_designer,
+            cls.test_newline_pdf
         ]
         for f in files_to_remove:
             if os.path.exists(f):
                 os.remove(f)
+
+        # Also clean up the processed_pdfs directory created by extract_and_cache_pdf
+        if os.path.exists("processed_pdfs"):
+            shutil.rmtree("processed_pdfs")
 
     def test_pipeline_portuguese(self):
         # Run the processor
@@ -169,6 +244,109 @@ class TestPDFProcessor(unittest.TestCase):
         self.assertIn("rare_words_and_jargon", data["teacher_vocabulary"])
         self.assertIn("lexical_richness_ttr", data["teacher_vocabulary"])
         self.assertIn("readability_avg_zipf", data["teacher_vocabulary"])
+
+    def test_process_aulas_from_pdf(self):
+        result = process_aulas_from_pdf(self.test_aula_pdf, self.test_aula_json)
+
+        self.assertTrue(os.path.exists(self.test_aula_json))
+
+        with open(self.test_aula_json, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        self.assertEqual(data["metadata"]["source_file"], self.test_aula_pdf)
+        self.assertEqual(data["metadata"]["total_aulas_parsed"], 1)
+        # It should have defaulted to Chapter 00 since no chapter was provided
+        self.assertEqual(data["metadata"]["total_chapters_parsed"], 1)
+
+        self.assertEqual(len(data["chapters_analysis"]), 1)
+        chapter_report = data["chapters_analysis"][0]
+        self.assertEqual(chapter_report["chapter_info"], "Chapter 00 - Default Chapter")
+
+        self.assertEqual(len(chapter_report["aulas"]), 1)
+        aula_report = chapter_report["aulas"][0]
+
+        self.assertEqual(aula_report["aula_info"], "Aula 01 - Introdução à Fotossíntese")
+
+        # Check section metrics exist
+        self.assertIn("guia_do_professor", aula_report["section_metrics"])
+        self.assertIn("conteudo_do_aluno", aula_report["section_metrics"])
+        self.assertIn("atividades_do_aluno", aula_report["section_metrics"])
+
+        # Check that comparison objects are populated
+        self.assertIn("guia_vs_conteudo", aula_report)
+        self.assertIn("guia_vs_atividades", aula_report)
+        self.assertIn("conteudo_vs_atividades", aula_report)
+
+        # Basic spot check of contents
+        guia_vs_conteudo = aula_report["guia_vs_conteudo"]
+        self.assertNotIn("sense_validation", guia_vs_conteudo) # No longer validating paragraphs across sections
+        self.assertIn("topic_order", guia_vs_conteudo)
+        self.assertIn("ner_consistency", guia_vs_conteudo)
+
+    def test_caching_and_directory_structure(self):
+        import hashlib
+
+        # We'll use the chapter_aula_pdf to test the actual extraction and caching
+        from pdf_processor import extract_and_cache_pdf
+
+        chapters = extract_and_cache_pdf(self.test_chapter_aula_pdf)
+
+        self.assertEqual(len(chapters), 2)
+        self.assertEqual(chapters[0]["number"], "01")
+        self.assertEqual(chapters[0]["theme"], "Plant Biology")
+        self.assertEqual(chapters[1]["number"], "02")
+        self.assertEqual(chapters[1]["theme"], "Animal Biology")
+
+        hasher = hashlib.md5()
+        with open(self.test_chapter_aula_pdf, 'rb') as f:
+            hasher.update(f.read())
+        pdf_hash = hasher.hexdigest()
+
+        base_dir = os.path.join("processed_pdfs", pdf_hash)
+
+        # Verify the directory structure exists
+        self.assertTrue(os.path.exists(base_dir))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "chapters.json")))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "Chapter_01", "Aula_01", "teacher.json")))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "Chapter_02", "Aula_02", "teacher.json")))
+
+    def test_pipeline_designer_instructions(self):
+        # Run the processor
+        result = process_pdf_and_export_json(self.test_designer_pdf, self.test_json_designer)
+
+        # Verify JSON file was created
+        self.assertTrue(os.path.exists(self.test_json_designer))
+
+        with open(self.test_json_designer, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Verify metadata (total_paragraphs should be 3, since 2 were entirely filtered out)
+        self.assertEqual(data["metadata"]["source_file"], self.test_designer_pdf)
+        self.assertEqual(data["metadata"]["total_paragraphs"], 3)
+
+        # Verify the content
+        extracted_texts = [item["text"] for item in data["extracted_text"]]
+        self.assertIn("This is normal text.", extracted_texts)
+        self.assertIn("More normal text.", extracted_texts)
+        self.assertIn("The final normal text.", extracted_texts)
+
+        # Verify instructions were completely removed
+        for text in extracted_texts:
+            self.assertNotIn("Instrução Visual", text)
+            self.assertNotIn("DIAGRAMADOR", text)
+
+    def test_pipeline_newline_handling(self):
+        # Extract text directly
+        from pdf_processor import extract_text_from_pdf
+
+        extracted_data = extract_text_from_pdf(self.test_newline_pdf)
+
+        extracted_texts = [item["text"] for item in extracted_data]
+        self.assertEqual(len(extracted_texts), 2)
+
+        # Verify newlines are replaced with space
+        self.assertEqual(extracted_texts[0], "This paragraph has a newline character.")
+        self.assertEqual(extracted_texts[1], "This one also has newlines.")
 
 if __name__ == "__main__":
     unittest.main()
