@@ -122,6 +122,7 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
         # We only consider paragraphs that have vectors and aren't empty
         if doc.has_vector and len(doc.text.strip()) > 10:
             docs.append({
+                "id": item.get("id"),
                 "page": item["page"],
                 "text": item["text"],
                 "doc": doc
@@ -140,10 +141,12 @@ def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
                 redundancies.append({
                     "score": round(similarity, 4),
                     "para1": {
+                        "id": docs[i]["id"],
                         "page": docs[i]["page"],
                         "text": docs[i]["text"]
                     },
                     "para2": {
+                        "id": docs[j]["id"],
                         "page": docs[j]["page"],
                         "text": docs[j]["text"]
                     }
@@ -224,6 +227,7 @@ def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
         doc = nlp(item["text"])
         if doc.has_vector and len(doc.text.strip()) > 10:
             teacher_docs.append({
+                "id": item.get("id"),
                 "page": item["page"],
                 "text": item["text"],
                 "doc": doc
@@ -234,6 +238,7 @@ def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
         doc = nlp(item["text"])
         if doc.has_vector and len(doc.text.strip()) > 10:
             student_docs.append({
+                "id": item.get("id"),
                 "page": item["page"],
                 "text": item["text"],
                 "doc": doc
@@ -254,10 +259,12 @@ def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
             matches.append({
                 "score": round(best_score, 4),
                 "student_topic": {
+                    "id": s_doc["id"],
                     "page": s_doc["page"],
                     "text": s_doc["text"]
                 },
                 "teacher_topic": {
+                    "id": best_match["id"],
                     "page": best_match["page"],
                     "text": best_match["text"]
                 }
