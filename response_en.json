@@ -22,12 +22,12 @@
             "Joe Biden"
         ],
         "LOCATION": [
-            "Washington D.C.",
-            "the United States"
+            "the United States",
+            "Washington D.C."
         ],
         "DATE": [
-            "the 15th of November 2023",
-            "November 15, 2023"
+            "November 15, 2023",
+            "the 15th of November 2023"
         ]
     },
     "redundancies": [

@@ -509,7 +509,7 @@ def compare_aula_sections(aula, nlp):
     if atividades:
         report["section_metrics"]["atividades_do_aluno"] = {
             "entities": extract_named_entities(atividades, nlp),
-            "redundancies": detect_semantic_redundancy(atividades, nlp),
+            "redundancies": [],
             "vocabulary": evaluate_vocabulary(atividades, nlp)
         }
 
