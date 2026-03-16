@@ -1,120 +1,162 @@
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
-import threading
+import sys
 import json
 import os
+import threading
+
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+                             QGroupBox, QRadioButton, QLabel, QLineEdit,
+                             QPushButton, QTextEdit, QFileDialog, QMessageBox)
+from PyQt5.QtCore import pyqtSignal, QObject
 
 from pdf_processor import process_pdf_and_export_json, compare_pedagogic_materials, process_aulas_from_pdf
 
-class PDFProcessorGUI:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("ReviPDF Processor")
-        self.root.geometry("800x600")
+class WorkerSignals(QObject):
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
 
-        self.mode_var = tk.StringVar(value="Process PDF")
-
-        self.file1_path = tk.StringVar()
-        self.file2_path = tk.StringVar()
+class PDFProcessorGUI(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ReviPDF Processor")
+        self.resize(800, 600)
+        self.signals = WorkerSignals()
+        self.signals.finished.connect(self._process_success)
+        self.signals.error.connect(self._process_error)
 
         self.create_widgets()
 
     def create_widgets(self):
-        # Mode Selection
-        mode_frame = tk.LabelFrame(self.root, text="Select Mode", padx=10, pady=10)
-        mode_frame.pack(fill="x", padx=10, pady=5)
+        main_layout = QVBoxLayout()
 
-        modes = ["Process PDF", "Process Aulas", "Compare Pedagogic Materials"]
-        for mode in modes:
-            tk.Radiobutton(mode_frame, text=mode, variable=self.mode_var, value=mode, command=self.update_file_inputs).pack(side="left", padx=5)
+        # Mode Selection
+        mode_group = QGroupBox("Select Mode")
+        mode_layout = QHBoxLayout()
+
+        self.mode_pdf = QRadioButton("Process PDF")
+        self.mode_pdf.setChecked(True)
+        self.mode_aulas = QRadioButton("Process Aulas")
+        self.mode_compare = QRadioButton("Compare Pedagogic Materials")
+
+        mode_layout.addWidget(self.mode_pdf)
+        mode_layout.addWidget(self.mode_aulas)
+        mode_layout.addWidget(self.mode_compare)
+        mode_group.setLayout(mode_layout)
+
+        self.mode_pdf.toggled.connect(self.update_file_inputs)
+        self.mode_aulas.toggled.connect(self.update_file_inputs)
+        self.mode_compare.toggled.connect(self.update_file_inputs)
+
+        main_layout.addWidget(mode_group)
 
         # File Inputs
-        self.file_frame = tk.LabelFrame(self.root, text="Select Files", padx=10, pady=10)
-        self.file_frame.pack(fill="x", padx=10, pady=5)
+        file_group = QGroupBox("Select Files")
+        self.file_layout = QVBoxLayout()
 
-        self.file1_label = tk.Label(self.file_frame, text="PDF File:")
-        self.file1_label.grid(row=0, column=0, sticky="w")
-        self.file1_entry = tk.Entry(self.file_frame, textvariable=self.file1_path, width=50)
-        self.file1_entry.grid(row=0, column=1, padx=5)
-        self.file1_btn = tk.Button(self.file_frame, text="Browse", command=lambda: self.browse_file(self.file1_path))
-        self.file1_btn.grid(row=0, column=2)
+        # File 1 Row
+        file1_row = QHBoxLayout()
+        self.file1_label = QLabel("PDF File:")
+        self.file1_entry = QLineEdit()
+        self.file1_btn = QPushButton("Browse")
+        self.file1_btn.clicked.connect(lambda: self.browse_file(self.file1_entry))
 
-        self.file2_label = tk.Label(self.file_frame, text="Student PDF:")
-        self.file2_entry = tk.Entry(self.file_frame, textvariable=self.file2_path, width=50)
-        self.file2_btn = tk.Button(self.file_frame, text="Browse", command=lambda: self.browse_file(self.file2_path))
+        file1_row.addWidget(self.file1_label)
+        file1_row.addWidget(self.file1_entry)
+        file1_row.addWidget(self.file1_btn)
 
-        self.update_file_inputs()
+        self.file_layout.addLayout(file1_row)
+
+        # File 2 Row (Initially Hidden)
+        self.file2_row_widget = QWidget()
+        file2_row = QHBoxLayout(self.file2_row_widget)
+        file2_row.setContentsMargins(0, 0, 0, 0)
+        self.file2_label = QLabel("Student PDF:")
+        self.file2_entry = QLineEdit()
+        self.file2_btn = QPushButton("Browse")
+        self.file2_btn.clicked.connect(lambda: self.browse_file(self.file2_entry))
+
+        file2_row.addWidget(self.file2_label)
+        file2_row.addWidget(self.file2_entry)
+        file2_row.addWidget(self.file2_btn)
+
+        self.file_layout.addWidget(self.file2_row_widget)
+        self.file2_row_widget.setVisible(False)
+
+        file_group.setLayout(self.file_layout)
+        main_layout.addWidget(file_group)
 
         # Action Button
-        self.run_btn = tk.Button(self.root, text="Run Processor", command=self.run_processing, bg="green", fg="white", font=("Arial", 12, "bold"))
-        self.run_btn.pack(pady=10)
+        self.run_btn = QPushButton("Run Processor")
+        self.run_btn.setStyleSheet("background-color: green; color: white; font-weight: bold; padding: 10px;")
+        self.run_btn.clicked.connect(self.run_processing)
+        main_layout.addWidget(self.run_btn)
 
         # Status Label
-        self.status_var = tk.StringVar()
-        self.status_var.set("Ready")
-        self.status_label = tk.Label(self.root, textvariable=self.status_var, fg="blue")
-        self.status_label.pack()
+        self.status_label = QLabel("Ready")
+        self.status_label.setStyleSheet("color: blue;")
+        main_layout.addWidget(self.status_label)
 
         # JSON Viewer
-        viewer_frame = tk.LabelFrame(self.root, text="Results (JSON)", padx=10, pady=10)
-        viewer_frame.pack(fill="both", expand=True, padx=10, pady=5)
+        viewer_group = QGroupBox("Results (JSON)")
+        viewer_layout = QVBoxLayout()
+        self.text_area = QTextEdit()
+        self.text_area.setLineWrapMode(QTextEdit.NoWrap)
+        self.text_area.setReadOnly(True)
+        viewer_layout.addWidget(self.text_area)
+        viewer_group.setLayout(viewer_layout)
+        main_layout.addWidget(viewer_group)
 
-        self.text_area = tk.Text(viewer_frame, wrap="none")
-        self.text_area.pack(side="left", fill="both", expand=True)
+        self.setLayout(main_layout)
 
-        scrollbar_y = tk.Scrollbar(viewer_frame, orient="vertical", command=self.text_area.yview)
-        scrollbar_y.pack(side="right", fill="y")
-        self.text_area.configure(yscrollcommand=scrollbar_y.set)
-
-        scrollbar_x = tk.Scrollbar(viewer_frame, orient="horizontal", command=self.text_area.xview)
-        scrollbar_x.pack(side="bottom", fill="x")
-        self.text_area.configure(xscrollcommand=scrollbar_x.set)
+    def get_selected_mode(self):
+        if self.mode_pdf.isChecked():
+            return "Process PDF"
+        elif self.mode_aulas.isChecked():
+            return "Process Aulas"
+        elif self.mode_compare.isChecked():
+            return "Compare Pedagogic Materials"
 
     def update_file_inputs(self):
-        mode = self.mode_var.get()
+        mode = self.get_selected_mode()
         if mode == "Compare Pedagogic Materials":
-            self.file1_label.config(text="Teacher PDF:")
-            self.file2_label.grid(row=1, column=0, sticky="w", pady=5)
-            self.file2_entry.grid(row=1, column=1, padx=5, pady=5)
-            self.file2_btn.grid(row=1, column=2, pady=5)
+            self.file1_label.setText("Teacher PDF:")
+            self.file2_row_widget.setVisible(True)
         else:
-            self.file1_label.config(text="PDF File:")
-            self.file2_label.grid_forget()
-            self.file2_entry.grid_forget()
-            self.file2_btn.grid_forget()
+            self.file1_label.setText("PDF File:")
+            self.file2_row_widget.setVisible(False)
 
-    def browse_file(self, path_var):
-        filename = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    def browse_file(self, line_edit):
+        filename, _ = QFileDialog.getOpenFileName(self, "Open PDF", "", "PDF Files (*.pdf)")
         if filename:
-            path_var.set(filename)
+            line_edit.setText(filename)
 
     def run_processing(self):
-        mode = self.mode_var.get()
-        f1 = self.file1_path.get()
-        f2 = self.file2_path.get()
+        mode = self.get_selected_mode()
+        f1 = self.file1_entry.text()
+        f2 = self.file2_entry.text()
 
         if not f1:
-            messagebox.showerror("Error", "Please select the primary PDF file.")
+            QMessageBox.critical(self, "Error", "Please select the primary PDF file.")
             return
 
         if mode == "Compare Pedagogic Materials" and not f2:
-            messagebox.showerror("Error", "Please select the student PDF file.")
+            QMessageBox.critical(self, "Error", "Please select the student PDF file.")
             return
 
         if not os.path.exists(f1):
-            messagebox.showerror("Error", f"File not found: {f1}")
+            QMessageBox.critical(self, "Error", f"File not found: {f1}")
             return
 
         if mode == "Compare Pedagogic Materials" and not os.path.exists(f2):
-            messagebox.showerror("Error", f"File not found: {f2}")
+            QMessageBox.critical(self, "Error", f"File not found: {f2}")
             return
 
-        self.run_btn.config(state="disabled")
-        self.status_var.set(f"Processing '{mode}'... Please wait.")
-        self.text_area.delete(1.0, tk.END)
+        self.run_btn.setEnabled(False)
+        self.status_label.setText(f"Processing '{mode}'... Please wait.")
+        self.text_area.clear()
 
         # Run in thread
         thread = threading.Thread(target=self._process_thread, args=(mode, f1, f2))
+        thread.daemon = True
         thread.start()
 
     def _process_thread(self, mode, f1, f2):
@@ -128,23 +170,23 @@ class PDFProcessorGUI:
                 result_data = compare_pedagogic_materials(f1, f2, "comparison_response.json")
 
             formatted_json = json.dumps(result_data, indent=4, ensure_ascii=False)
+            self.signals.finished.emit(formatted_json)
 
-            # Update GUI from main thread
-            self.root.after(0, self._process_success, formatted_json)
         except Exception as e:
-            self.root.after(0, self._process_error, str(e))
+            self.signals.error.emit(str(e))
 
     def _process_success(self, formatted_json):
-        self.text_area.insert(tk.END, formatted_json)
-        self.status_var.set("Processing Complete!")
-        self.run_btn.config(state="normal")
+        self.text_area.setPlainText(formatted_json)
+        self.status_label.setText("Processing Complete!")
+        self.run_btn.setEnabled(True)
 
     def _process_error(self, error_msg):
-        messagebox.showerror("Processing Error", f"An error occurred:\n{error_msg}")
-        self.status_var.set("Error during processing.")
-        self.run_btn.config(state="normal")
+        QMessageBox.critical(self, "Processing Error", f"An error occurred:\n{error_msg}")
+        self.status_label.setText("Error during processing.")
+        self.run_btn.setEnabled(True)
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = PDFProcessorGUI(root)
-    root.mainloop()
+    app = QApplication(sys.argv)
+    gui = PDFProcessorGUI()
+    gui.show()
+    sys.exit(app.exec_())
