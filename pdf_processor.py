@@ -496,6 +496,21 @@ def parse_aulas(extracted_data):
         if current_section:
             current_aula[current_section].append(item)
 
+    # Assign unique IDs
+    for chapter in chapters:
+        c_num = int(chapter["number"])
+        for aula in chapter["aulas"]:
+            a_num = int(aula["number"])
+
+            for i, item in enumerate(aula["guia_do_professor"], 1):
+                item["id"] = f"C{c_num}A{a_num}P{i}"
+
+            for i, item in enumerate(aula["conteudo_do_aluno"], 1):
+                item["id"] = f"C{c_num}A{a_num}S{i}"
+
+            for i, item in enumerate(aula["atividades_do_aluno"], 1):
+                item["id"] = f"C{c_num}A{a_num}A{i}"
+
     return chapters
 
 
