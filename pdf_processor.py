@@ -61,7 +61,10 @@ def extract_text_from_pdf(filepath):
             # block format: (x0, y0, x1, y1, "lines in block", block_no, block_type)
             # block_type 0 corresponds to text
             if block[6] == 0:
-                text = block[4].strip()
+                text = block[4]
+                # Filter out designer instructions to the end of the block (which acts as a paragraph)
+                text = re.sub(r"(?i)(Instrução Visual|\[INSTRUÇÃO PARA O DIAGRAMADOR\]).*", "", text, flags=re.DOTALL)
+                text = text.strip()
                 if text: # keep only non-empty paragraphs
                     extracted_data.append({
                         "page": page_num,
