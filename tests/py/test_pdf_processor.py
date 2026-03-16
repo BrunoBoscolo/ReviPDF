@@ -34,6 +34,8 @@ class TestPDFProcessor(unittest.TestCase):
         cls.test_designer_pdf = "test_designer.pdf"
         cls.test_json_designer = "response_designer.json"
 
+        cls.test_newline_pdf = "test_newline.pdf"
+
         paragraphs_pt = [
             "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023.",
             "Nesta reunião, foram discutidos os novos avanços na área da tecnologia, inteligência artificial e os impactos ambientais na Amazônia.",
@@ -85,6 +87,26 @@ class TestPDFProcessor(unittest.TestCase):
         ]
         cls.create_sample_pdf(cls.test_designer_pdf, designer_paragraphs)
 
+        newline_paragraphs = [
+            "This paragraph has\na newline character.",
+            "This one\nalso has\nnewlines."
+        ]
+        cls.create_sample_pdf_with_newlines(cls.test_newline_pdf, newline_paragraphs)
+
+    @classmethod
+    def create_sample_pdf_with_newlines(cls, filename, paragraphs):
+        c = canvas.Canvas(filename, pagesize=letter)
+        width, height = letter
+        y_position = height - 50
+        for text_content in paragraphs:
+            text_obj = c.beginText(50, y_position)
+            text_obj.textLines(text_content)
+            c.drawText(text_obj)
+            # Adjust y_position based on number of lines
+            lines = text_content.count('\n') + 1
+            y_position -= 40 * lines
+        c.save()
+
     @classmethod
     def create_sample_pdf(cls, filename, paragraphs):
         c = canvas.Canvas(filename, pagesize=letter)
@@ -106,7 +128,8 @@ class TestPDFProcessor(unittest.TestCase):
             cls.test_teacher_pdf, cls.test_student_pdf,
             cls.test_aula_pdf,
             cls.test_designer_pdf,
-            cls.test_json_designer
+            cls.test_json_designer,
+            cls.test_newline_pdf
         ]
         for f in files_to_remove:
             if os.path.exists(f):
@@ -257,6 +280,19 @@ class TestPDFProcessor(unittest.TestCase):
         for text in extracted_texts:
             self.assertNotIn("Instrução Visual", text)
             self.assertNotIn("DIAGRAMADOR", text)
+
+    def test_pipeline_newline_handling(self):
+        # Extract text directly
+        from pdf_processor import extract_text_from_pdf
+
+        extracted_data = extract_text_from_pdf(self.test_newline_pdf)
+
+        extracted_texts = [item["text"] for item in extracted_data]
+        self.assertEqual(len(extracted_texts), 2)
+
+        # Verify newlines are replaced with space
+        self.assertEqual(extracted_texts[0], "This paragraph has a newline character.")
+        self.assertEqual(extracted_texts[1], "This one also has newlines.")
 
 if __name__ == "__main__":
     unittest.main()
