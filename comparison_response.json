@@ -9,10 +9,12 @@
         {
             "score": 0.9415,
             "para1": {
+                "id": null,
                 "page": 1,
                 "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
             },
             "para2": {
+                "id": null,
                 "page": 1,
                 "text": "Jan Ingenhousz studied this process in 1779."
             }
@@ -22,10 +24,12 @@
         {
             "score": 0.903,
             "para1": {
+                "id": null,
                 "page": 1,
                 "text": "It was discovered by Jan Ingenhousz."
             },
             "para2": {
+                "id": null,
                 "page": 1,
                 "text": "Jan Ingenhousz found it out."
             }
@@ -56,10 +60,12 @@
         {
             "score": 0.9371,
             "student_topic": {
+                "id": null,
                 "page": 1,
                 "text": "Plants use photosynthesis to transform sunlight into chemical energy."
             },
             "teacher_topic": {
+                "id": null,
                 "page": 1,
                 "text": "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical ener"
             }
@@ -67,10 +73,12 @@
         {
             "score": 0.8836,
             "student_topic": {
+                "id": null,
                 "page": 1,
                 "text": "It was discovered by Jan Ingenhousz."
             },
             "teacher_topic": {
+                "id": null,
                 "page": 1,
                 "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
             }
@@ -120,9 +128,9 @@
             "ingenhousz": 2
         },
         "rare_words_and_jargon": {
-            "ingenhousz": 0.0,
             "photosynthesis": 3.03,
-            "ener": 1.84
+            "ener": 1.84,
+            "ingenhousz": 0.0
         },
         "lexical_richness_ttr": 0.7222,
         "readability_avg_zipf": 4.2292
@@ -142,8 +150,8 @@
             "find": 1
         },
         "rare_words_and_jargon": {
-            "ingenhousz": 0.0,
-            "photosynthesis": 3.03
+            "photosynthesis": 3.03,
+            "ingenhousz": 0.0
         },
         "lexical_richness_ttr": 0.8462,
         "readability_avg_zipf": 4.618

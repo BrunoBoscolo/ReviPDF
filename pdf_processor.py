@@ -82,6 +82,7 @@ def extract_named_entities(extracted_data, nlp):
     """
     Extracts named entities (Persons, Locations, Dates) from the text using the provided spaCy model.
     Maps English and Portuguese entity labels for consistency.
+    Filters out common educational false positives.
     """
     entities = {
         "PERSON": set(),
@@ -94,15 +95,66 @@ def extract_named_entities(extracted_data, nlp):
     location_labels = {"LOC", "GPE"}
     date_labels = {"DATE"}
 
+    # Common words in educational headers and instructions that get misclassified
+    bad_words = {
+        "AULA", "AULAS", "ALUNO", "ALUNOS", "ALUNA", "ALUNAS", "PROFESSOR", "PROFESSORES", "PROFESSORA", "PROFESSORAS",
+        "OBJETIVO", "OBJETIVOS", "EXERCÍCIO", "EXERCÍCIOS", "GABARITO",
+        "PÁGINA", "CAPÍTULO", "UNIDADE", "SESSÃO", "SESSÕES", "SESSAO", "FIQUE", "LIGADO",
+        "MÃO", "MASSA", "LEIA", "TEXTO", "MAPA", "FIGURA", "IMAGEM", "TABELA",
+        "QUESTÃO", "QUESTÕES", "RESPOSTA", "RESPOSTAS", "PESSOAL", "VAMOS", "COMEÇAR",
+        "PARTE", "LEITURA", "HORA", "SABIA", "LIVRO", "CONTEÚDO", "GUIA",
+        "ATIVIDADE", "ATIVIDADES", "FONTE", "CADERNO", "NOTA", "TEMA", "TEMAS",
+        "REVISÃO", "MÓDULO", "DISCIPLINA", "MATÉRIA", "ENSINO", "MÉDIO",
+        "FUNDAMENTAL", "BÁSICA", "ESCOLA", "COLÉGIO", "TURMA", "GRUPO"
+    }
+
+    def clean_entity(ent):
+        """
+        Cleans and filters out common false positive entities in educational materials.
+        Returns the cleaned entity string, or None if the entity is invalid.
+        """
+        text_words = ent.text.split()
+        cleaned_words = []
+
+        for w in text_words:
+            clean_w = w.strip(".,;:?!()\"'")
+            if clean_w.upper() in bad_words:
+                continue
+            cleaned_words.append(w)
+
+        if not cleaned_words:
+            return None
+
+        final_text = " ".join(cleaned_words)
+
+        # Re-evaluate length and casing on the final cleaned text
+        if ent.label_ in person_labels.union(location_labels):
+            if final_text.islower() or len(final_text.strip(".,;:?!()\"'")) <= 1:
+                return None
+
+        return final_text
+
     for item in extracted_data:
-        doc = nlp(item["text"])
+        text = item["text"]
+
+        # If the text is entirely uppercase, convert to Title Case
+        # to help spaCy's NER distinguish names from regular text.
+        if text.isupper():
+            text = text.title()
+
+        doc = nlp(text)
+
         for ent in doc.ents:
-            if ent.label_ in person_labels:
-                entities["PERSON"].add(ent.text)
-            elif ent.label_ in location_labels:
-                entities["LOCATION"].add(ent.text)
-            elif ent.label_ in date_labels:
-                entities["DATE"].add(ent.text)
+            if ent.label_ in person_labels.union(location_labels).union(date_labels):
+                valid_text = clean_entity(ent)
+
+                if valid_text:
+                    if ent.label_ in person_labels:
+                        entities["PERSON"].add(valid_text)
+                    elif ent.label_ in location_labels:
+                        entities["LOCATION"].add(valid_text)
+                    elif ent.label_ in date_labels:
+                        entities["DATE"].add(valid_text)
 
     # Convert sets back to lists for easier consumption (like JSON serialization)
     return {k: list(v) for k, v in entities.items()}
