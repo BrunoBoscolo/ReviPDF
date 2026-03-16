@@ -519,7 +519,6 @@ def compare_aula_sections(aula, nlp):
         conteudo_ents = report["section_metrics"]["conteudo_do_aluno"]["entities"]
 
         report["guia_vs_conteudo"] = {
-            "sense_validation": validate_sense(guia, conteudo, nlp),
             "topic_order": analyze_topic_order(guia, conteudo, nlp),
             "ner_consistency": check_ner_consistency(guia_ents, conteudo_ents)
         }
@@ -530,7 +529,6 @@ def compare_aula_sections(aula, nlp):
         atividades_ents = report["section_metrics"]["atividades_do_aluno"]["entities"]
 
         report["guia_vs_atividades"] = {
-            "sense_validation": validate_sense(guia, atividades, nlp),
             "topic_order": analyze_topic_order(guia, atividades, nlp),
             "ner_consistency": check_ner_consistency(guia_ents, atividades_ents)
         }
@@ -541,7 +539,6 @@ def compare_aula_sections(aula, nlp):
         atividades_ents = report["section_metrics"]["atividades_do_aluno"]["entities"]
 
         report["conteudo_vs_atividades"] = {
-            "sense_validation": validate_sense(conteudo, atividades, nlp),
             "topic_order": analyze_topic_order(conteudo, atividades, nlp),
             "ner_consistency": check_ner_consistency(conteudo_ents, atividades_ents)
         }
