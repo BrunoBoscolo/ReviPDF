@@ -64,6 +64,8 @@ def extract_text_from_pdf(filepath):
                 text = block[4]
                 # Filter out designer instructions to the end of the block (which acts as a paragraph)
                 text = re.sub(r"(?i)(Instrução Visual|\[INSTRUÇÃO PARA O DIAGRAMADOR\]).*", "", text, flags=re.DOTALL)
+                # Replace newlines and any other whitespace sequences with a single space
+                text = re.sub(r"\s+", " ", text)
                 text = text.strip()
                 if text: # keep only non-empty paragraphs
                     extracted_data.append({
