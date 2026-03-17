@@ -1,0 +1,46 @@
+{
+    "guia_do_professor": [
+        {
+            "score": 0.8915,
+            "para1": {
+                "id": "C1A1P5",
+                "page": 1,
+                "text": "FALA: Explique que as letras possuem nomes que nos ajudam a desvendar a escrita. Ao dizermos Bê, já estamos falando o início de Bala. Ressalte que as vogais são as peças fundamentais que aparecem em todos os nomes e sílabas. Peça que localizem no texto o trecho que explica como a união de sons organiza as palavras de forma clara."
+            },
+            "para2": {
+                "id": "C1A1P10",
+                "page": 2,
+                "text": "Encerramento: Hoje aprendemos que o nome da letra é a nossa bússola na leitura e que as vogais são as companheiras obrigatórias que dão clareza para todas as palavras que escrevemos no nosso dia a dia."
+            }
+        },
+        {
+            "score": 0.8536,
+            "para1": {
+                "id": "C1A1P7",
+                "page": 1,
+                "text": "Erro comum: O aluno pode escrever apenas as consoantes para representar a sílaba, como registrar BL para a palavra Bule, por acreditar que o som do nome da letra Bê já contém a vogal necessária para a escrita."
+            },
+            "para2": {
+                "id": "C1A1P9",
+                "page": 2,
+                "text": "escrita dele e peça para ele acrescentar a letra correspondente para que a sílaba fique completa e organizada de forma lógica."
+            }
+        }
+    ],
+    "conteudo_do_aluno": [
+        {
+            "score": 0.8594,
+            "para1": {
+                "id": "C1A1S1",
+                "page": 2,
+                "text": "Percebermos que as letras do alfabeto possuem nomes que funcionam como etiquetas. Quando pronunciamos o nome de uma consoante, como o Bê ou o Pê, descobrimos que o som que usamos para ler as palavras já está escondido no próprio nome da letra. Compreendemos que essa é a nossa primeira grande pista para desvendar a escrita e reconhecer os fonemas em diferentes posições Gustavo Ruan."
+            },
+            "para2": {
+                "id": "C1A1S2",
+                "page": 2,
+                "text": "Identificamos que as vogais são as peças fundamentais desse processo. Elas aparecem nos nomes das letras e em todas as sílabas que construímos. Quando unimos o som de uma letra ao som de uma vogal, organizamos as palavras de forma clara e lógica. Assim, facilitamos a leitura e a escrita correta de objetos e nomes que encontramos no dia a dia."
+            }
+        }
+    ],
+    "atividades_do_aluno": []
+}

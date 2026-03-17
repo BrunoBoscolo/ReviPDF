@@ -51,7 +51,7 @@
 <span class="material-symbols-outlined text-[20px]">share</span>
 <span>Share</span>
 </button>
-<button class="flex h-10 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:brightness-110">
+<button id="reviewAllBtn" class="flex h-10 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:brightness-110">
 <span class="material-symbols-outlined text-[20px]">done_all</span>
 <span>Review All</span>
 </button>
@@ -226,4 +226,51 @@
 </div>
 </main>
 </div>
+<script type="module">
+  document.addEventListener('DOMContentLoaded', () => {
+    const reviewAllBtn = document.getElementById('reviewAllBtn');
+    if (reviewAllBtn && window.__TAURI__) {
+      reviewAllBtn.addEventListener('click', async () => {
+        try {
+          // We assume @tauri-apps/api and @tauri-apps/plugin-shell are bundled or available
+          // Since we're in a raw HTML setup, we might need window.__TAURI_INTERNALS__ or similar.
+          // In a bundler setup we would import { Command } from '@tauri-apps/plugin-shell';
+          // But since the config has withGlobalTauri: true, it should be under window.__TAURI__.core.invoke
+          // Wait, the new plugin-shell requires either bundler import or global exposure.
+          // By default withGlobalTauri exposes core and path, but plugins might need direct access.
+          // Let's use the core invoke if needed, or window.__TAURI_PLUGIN_SHELL__.Command if it exists.
+
+          // Fallback to window.__TAURI__.shell or window.__TAURI_PLUGIN_SHELL__ if available.
+          const Command = (window.__TAURI__.shell && window.__TAURI__.shell.Command)
+                          || (window.__TAURI_PLUGIN_SHELL__ && window.__TAURI_PLUGIN_SHELL__.Command);
+
+          if (!Command) {
+             console.error("Tauri shell Command API not found.");
+             return;
+          }
+
+          console.log("Starting Python sidecar...");
+
+          const command = Command.sidecar("binaries/pdf_processor", []);
+
+          command.on('close', data => {
+            console.log(`command finished with code ${data.code} and signal ${data.signal}`);
+          });
+
+          command.on('error', error => console.error(`command error: "${error}"`));
+          command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
+          command.stderr.on('data', line => console.log(`command stderr: "${line}"`));
+
+          // We use execute instead of spawn as spawn requires shell:allow-spawn permission
+          const output = await command.execute();
+          console.log('Sidecar execution finished:', output);
+        } catch (error) {
+          console.error("Failed to execute sidecar:", error);
+        }
+      });
+    } else {
+      console.warn("Tauri shell API not available or button not found.");
+    }
+  });
+</script>
 </body></html>
