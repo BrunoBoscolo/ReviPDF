@@ -261,10 +261,11 @@
           command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
           command.stderr.on('data', line => console.log(`command stderr: "${line}"`));
 
-          const child = await command.spawn();
-          console.log('pid:', child.pid);
+          // We use execute instead of spawn as spawn requires shell:allow-spawn permission
+          const output = await command.execute();
+          console.log('Sidecar execution finished:', output);
         } catch (error) {
-          console.error("Failed to spawn sidecar:", error);
+          console.error("Failed to execute sidecar:", error);
         }
       });
     } else {
