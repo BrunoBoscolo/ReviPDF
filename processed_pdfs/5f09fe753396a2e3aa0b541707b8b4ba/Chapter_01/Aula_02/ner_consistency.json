@@ -1,0 +1,62 @@
+{
+    "guia_vs_conteudo": {
+        "PERSON": {
+            "in_both": [
+                "Teresa"
+            ],
+            "missing_in_student": [
+                "PATRÍCIA"
+            ],
+            "missing_in_teacher": []
+        },
+        "LOCATION": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        },
+        "DATE": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        }
+    },
+    "guia_vs_atividades": {
+        "PERSON": {
+            "in_both": [],
+            "missing_in_student": [
+                "PATRÍCIA",
+                "Teresa"
+            ],
+            "missing_in_teacher": []
+        },
+        "LOCATION": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        },
+        "DATE": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        }
+    },
+    "conteudo_vs_atividades": {
+        "PERSON": {
+            "in_both": [],
+            "missing_in_student": [
+                "Teresa"
+            ],
+            "missing_in_teacher": []
+        },
+        "LOCATION": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        },
+        "DATE": {
+            "in_both": [],
+            "missing_in_student": [],
+            "missing_in_teacher": []
+        }
+    }
+}
