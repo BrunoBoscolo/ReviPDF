@@ -6,3 +6,4 @@ src-tauri/binaries/*.exe
 dist/
 build/
 *.spec
+revipdf/src-tauri/binaries/pdf_processor-x86_64-pc-windows-msvc.exe
