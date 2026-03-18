@@ -252,7 +252,7 @@
 
         let capturedHash = null;
 
-        command.on('data', line => {
+        command.stdout.on('data', line => {
           console.log("Sidecar stdout:", line);
           try {
             // Because print() might send multiple lines or buffering might combine JSON,
@@ -267,7 +267,7 @@
           }
         });
 
-        command.on('stderr', line => {
+        command.stderr.on('data', line => {
           console.error("Sidecar stderr:", line);
         });
 
