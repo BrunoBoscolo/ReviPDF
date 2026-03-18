@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+import os
+import sys
+
+# Force unbuffered output for robust Tauri IPC
+os.environ["PYTHONUNBUFFERED"] = "1"
+
 import fitz  # PyMuPDF
 import spacy
 from langdetect import detect, DetectorFactory
@@ -453,7 +459,7 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Pedagogic comparison data successfully exported to {output_json}")
+    print(f"Pedagogic comparison data successfully exported to {output_json}", flush=True)
     return response_data
 
 
@@ -491,7 +497,7 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Data successfully exported to {output_json}")
+    print(f"Data successfully exported to {output_json}", flush=True)
     return response_data
 
 
@@ -826,7 +832,9 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
     # Note: JSON structure dumped to stdout for integration with Tauri frontend
-    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}))
+    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}), flush=True)
+    import sys
+    sys.stdout.flush()
     return response_data
 
 if __name__ == "__main__":
