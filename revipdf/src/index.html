@@ -254,7 +254,7 @@
           console.log("Sidecar stdout:", line);
           try {
             const parsed = JSON.parse(line);
-            if (parsed.status === "success" && parsed.pdf_hash) {
+            if (parsed.pdf_hash) {
               console.log("Setting pdfHash to:", parsed.pdf_hash);
               localStorage.setItem('currentPdfHash', parsed.pdf_hash);
             }

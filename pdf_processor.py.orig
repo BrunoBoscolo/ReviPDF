@@ -455,8 +455,6 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
 
     print(f"Pedagogic comparison data successfully exported to {output_json}")
     return response_data
-    import sys
-    sys.stdout.flush()
 
 
 def process_pdf_and_export_json(filepath, output_json="response.json"):
@@ -495,8 +493,6 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
 
     print(f"Data successfully exported to {output_json}")
     return response_data
-    import sys
-    sys.stdout.flush()
 
 
 def parse_aulas(extracted_data):
@@ -830,9 +826,7 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
     # Note: JSON structure dumped to stdout for integration with Tauri frontend
-    import sys
     print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}))
-    sys.stdout.flush()
     return response_data
 
 if __name__ == "__main__":
