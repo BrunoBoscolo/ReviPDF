@@ -825,7 +825,8 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Aula comparison data successfully exported to {output_json}")
+    # Note: JSON structure dumped to stdout for integration with Tauri frontend
+    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}))
     return response_data
 
 if __name__ == "__main__":

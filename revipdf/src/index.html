@@ -250,6 +250,17 @@
       try {
         const command = Command.sidecar("binaries/pdf_processor", ["aulas", filePath]);
 
+        command.on('data', line => {
+          try {
+            const parsed = JSON.parse(line);
+            if (parsed.status === "success" && parsed.pdf_hash) {
+              localStorage.setItem('currentPdfHash', parsed.pdf_hash);
+            }
+          } catch (e) {
+            // normal stdout line
+          }
+        });
+
         command.on('close', data => {
           if (data.code === 0) {
             showStatus('Processing complete! Redirecting...');

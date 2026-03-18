@@ -8,6 +8,15 @@
   "permissions": [
     "core:default",
     "dialog:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-read",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
     {
       "identifier": "shell:allow-execute",
       "allow": [
