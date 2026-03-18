@@ -2,6 +2,9 @@
 import os
 import sys
 
+# Force unbuffered output for robust Tauri IPC
+os.environ["PYTHONUNBUFFERED"] = "1"
+
 # Override PyInstaller/PyMuPDF temp extraction directory specifically for Tauri to avoid
 # "decompression resulted in return code -1" caused by overlapping processes or locked %TEMP%.
 if getattr(sys, 'frozen', False):
@@ -466,7 +469,7 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Pedagogic comparison data successfully exported to {output_json}")
+    print(f"Pedagogic comparison data successfully exported to {output_json}", flush=True)
     return response_data
     import sys
     sys.stdout.flush()
@@ -506,7 +509,7 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Data successfully exported to {output_json}")
+    print(f"Data successfully exported to {output_json}", flush=True)
     return response_data
     import sys
     sys.stdout.flush()
@@ -743,7 +746,7 @@ def extract_and_cache_pdf(filepath):
     return chapters
 
 
-def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
+def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_output=None):
     """
     Main orchestration function for Aula processing.
     Uses cached structure or extracts texts, parses chapters/aulas and their sections,
@@ -842,9 +845,17 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
+    if hash_output:
+        import sys
+        try:
+            with open(hash_output, 'w', encoding='utf-8') as f:
+                f.write(pdf_hash)
+        except Exception as e:
+            print(f"Failed to write hash output: {e}", file=sys.stderr)
+
     # Note: JSON structure dumped to stdout for integration with Tauri frontend
     import sys
-    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}))
+    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}), flush=True)
     sys.stdout.flush()
     return response_data
 
@@ -854,11 +865,12 @@ if __name__ == "__main__":
     parser.add_argument("mode", type=str, choices=["aulas", "pdf", "compare"], help="Processing mode")
     parser.add_argument("file", type=str, help="Primary PDF file to process")
     parser.add_argument("--file2", type=str, help="Secondary PDF file (student) for comparison", default=None)
+    parser.add_argument("--hash-output", type=str, help="File to write the resulting pdf_hash to", default=None)
 
     args = parser.parse_args()
 
     if args.mode == "aulas":
-        process_aulas_from_pdf(args.file)
+        process_aulas_from_pdf(args.file, hash_output=args.hash_output)
     elif args.mode == "pdf":
         process_pdf_and_export_json(args.file)
     elif args.mode == "compare":

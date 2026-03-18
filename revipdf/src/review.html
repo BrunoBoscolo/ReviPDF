@@ -81,8 +81,19 @@
     const contentTitle = document.getElementById('contentTitle');
     const metricsOverview = document.getElementById('metricsOverview');
 
-    const pdfHash = localStorage.getItem('currentPdfHash');
-    console.log("Retrieved pdfHash from localStorage:", pdfHash);
+    let pdfHash = null;
+    try {
+        pdfHash = localStorage.getItem('currentPdfHash');
+        console.log("Retrieved pdfHash from localStorage:", pdfHash);
+    } catch (e) {
+        console.warn("Could not read from localStorage, checking URL params", e);
+    }
+
+    if (!pdfHash) {
+        const urlParams = new URLSearchParams(window.location.search);
+        pdfHash = urlParams.get('hash');
+        console.log("Retrieved pdfHash from URL:", pdfHash);
+    }
 
     if (!pdfHash) {
         viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">No recent processed document found. Please go back and upload a PDF.</div>`;
