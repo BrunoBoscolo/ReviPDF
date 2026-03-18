@@ -254,16 +254,18 @@
 
         command.stdout.on('data', line => {
           console.log("Sidecar stdout:", line);
-          try {
-            // Because print() might send multiple lines or buffering might combine JSON,
-            // we try to parse it. If it fails, that's fine.
-            const parsed = JSON.parse(line.trim());
-            if (parsed && parsed.pdf_hash) {
-              console.log("Captured pdfHash from stdout:", parsed.pdf_hash);
-              capturedHash = parsed.pdf_hash;
+          // Split by newline in case multiple print statements are buffered together
+          const parts = line.split('\n');
+          for (const part of parts) {
+            try {
+              const parsed = JSON.parse(part.trim());
+              if (parsed && parsed.pdf_hash) {
+                console.log("Captured pdfHash from stdout:", parsed.pdf_hash);
+                capturedHash = parsed.pdf_hash;
+              }
+            } catch (e) {
+              // normal stdout line, ignore parse errors
             }
-          } catch (e) {
-            // normal stdout line, ignore parse errors
           }
         });
 
