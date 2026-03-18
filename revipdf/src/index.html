@@ -4,7 +4,8 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>PDF Revise - Document Manager</title>
-    <link href="./output.css" rel="stylesheet"/>
+    <!-- We must use locally compiled Tailwind CSS per memory constraints -->
+    <link href="output.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -95,7 +96,7 @@
 </div>
 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Upload New PDF</h3>
 <p class="text-slate-500 dark:text-slate-400 mt-1 mb-6 max-w-sm">Drag and drop your PDF files here, or click to browse from your computer.</p>
-<button id="browseBtn" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
+<button id="browseBtn" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 relative z-10">
 <span class="material-symbols-outlined text-lg">add</span>
                             Browse Files
                         </button>
@@ -224,10 +225,17 @@
   const { open } = window.__TAURI__.dialog;
 
   document.addEventListener('DOMContentLoaded', () => {
-    const statusMessage = document.getElementById('statusMessage');
-    const dropzone = document.getElementById('dropzone');
+    const statusMessage = document.createElement('div');
+    statusMessage.id = 'statusMessage';
+
+    const dropzone = document.querySelector('.group'); // Find the upload area
+    if (dropzone) {
+      dropzone.id = 'dropzone';
+      dropzone.appendChild(statusMessage);
+    }
 
     function showStatus(msg, isError = false) {
+      if (!statusMessage) return;
       statusMessage.textContent = msg;
       statusMessage.className = `mt-4 text-sm font-medium ${isError ? 'text-red-500' : 'text-primary'} block`;
     }

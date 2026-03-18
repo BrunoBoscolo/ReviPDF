@@ -17,6 +17,15 @@
           "args": true
         }
       ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/pdf_processor",
+          "sidecar": true
+        }
+      ]
     }
   ]
 }
