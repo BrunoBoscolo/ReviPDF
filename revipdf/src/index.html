@@ -1,276 +1,306 @@
 <!DOCTYPE html>
-
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Revision Workspace - PDF Revise</title>
-<link href="./output.css" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PDF Revise - Document Manager</title>
+    <link href="./output.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Highlight dropzone when dragged over */
+        .drop-active {
+            border-color: rgba(72, 0, 173, 0.8) !important;
+            background-color: rgba(72, 0, 173, 0.05) !important;
+        }
+    </style>
 </head>
-<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
-<div class="relative flex h-screen w-full flex-col overflow-hidden">
-<!-- Top Header -->
-<header class="flex h-16 items-center justify-between border-b border-primary/10 bg-white dark:bg-slate-900 px-6 shrink-0">
-<div class="flex items-center gap-4">
-<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
-<span class="material-symbols-outlined">edit_note</span>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">description</span>
 </div>
 <div>
-<h2 class="text-sm font-bold leading-tight tracking-tight">Revision Workspace</h2>
-<div class="flex items-center gap-2 text-xs text-slate-500">
-<span>English_Essay_Draft.pdf</span>
-<span class="material-symbols-outlined text-xs">chevron_right</span>
-<span class="font-medium text-primary">Draft v2</span>
+<h1 class="text-slate-900 dark:text-white font-bold text-lg leading-none">PDF Revise</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Document Manager</p>
 </div>
 </div>
-</div>
-<div class="flex flex-1 justify-center max-w-xl">
-<div class="flex items-center gap-1 rounded-xl bg-primary/5 p-1 dark:bg-primary/20">
-<button class="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all">
-<span class="material-symbols-outlined text-[20px]">zoom_out</span>
-</button>
-<div class="px-3 text-xs font-semibold text-slate-600 dark:text-slate-300">100%</div>
-<button class="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 transition-all">
-<span class="material-symbols-outlined text-[20px]">zoom_in</span>
-</button>
-<div class="mx-2 h-4 w-px bg-primary/20"></div>
-<button class="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-slate-800 text-primary">
-<span class="material-symbols-outlined text-[20px]">auto_fix_high</span>
-</button>
-<button class="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-slate-800">
-<span class="material-symbols-outlined text-[20px]">pan_tool</span>
-</button>
-<button class="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white hover:shadow-sm dark:hover:bg-slate-800">
-<span class="material-symbols-outlined text-[20px]">text_fields</span>
-</button>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<button class="flex h-10 items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 text-sm font-bold shadow-sm">
-<span class="material-symbols-outlined text-[20px]">share</span>
-<span>Share</span>
-</button>
-<button id="reviewAllBtn" class="flex h-10 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:brightness-110">
-<span class="material-symbols-outlined text-[20px]">done_all</span>
-<span>Review All</span>
-</button>
-<div class="ml-2 h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-primary/20 bg-cover bg-center" data-alt="User profile avatar circle" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAuU5pHdoMObEM5kXTlCGUP_uljgakCTdL2bWr7LZyLG0mSFQcAPqyjqWgNy0oZdj7VuiEJHiWi9isYUxhecDPUf4L66kwSo2WmDN5IMQHcgLZS5VG63FiimeogIHUxhtlNF6DZWsiPSga44F-i_eyFykwRjglEFRNCMVuFYU4btfBn-7HGn679iNXsBIJXs5z3KkivBhW5407MFQbTckateqeG3lx9jX_wECsN0qozN3J4jyQInAFl0z9o7JX7D0MVoE0-C6wC5fst')"></div>
-</div>
-</header>
-<main class="flex flex-1 overflow-hidden">
-<!-- Sidebar Navigation -->
-<nav class="flex w-16 flex-col items-center border-r border-primary/10 bg-white dark:bg-slate-900 py-4 gap-6 shrink-0">
-<span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer transition-colors">dashboard</span>
-<span class="material-symbols-outlined text-primary cursor-pointer">description</span>
-<span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer transition-colors">history</span>
-<span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer transition-colors">settings</span>
-<div class="mt-auto">
-<span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer transition-colors">help</span>
-</div>
+<nav class="flex-1 px-4 space-y-1 mt-4">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-sm">Home</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-sm">Files</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors" href="#">
+<span class="material-symbols-outlined">schedule</span>
+<span class="text-sm">Recent</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm">Settings</span>
+</a>
 </nav>
-<!-- PDF Workspace Area -->
-<div class="flex flex-1 overflow-hidden">
-<!-- Left: Document Preview -->
-<div class="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 p-8 flex justify-center">
-<div class="w-full max-w-4xl bg-white dark:bg-slate-900 shadow-2xl rounded-sm p-16 min-h-[1200px] relative">
-<div class="mb-12 border-b border-slate-100 dark:border-slate-800 pb-8">
-<h1 class="text-3xl font-bold mb-2">The Evolution of Digital Architecture</h1>
-<p class="text-slate-500 text-sm italic">Author: Jordan Rivera | Date: Oct 24, 2023</p>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2">
+<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+<img alt="User Profile" data-alt="Avatar of a professional user profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxy5dlaMnwuNHp28xrMOUYKyLu9eqvHaB7-ZZRXN53InIIpGn4218VYWGyr4GcJTFKoJQJZ4Oqkihp8qAn3SfwW0JHqrEknevOq8uhovT1ou3Y8cYZqRSScu9A4If3_YytHs_lEZPS068Z4trCoPDBIf0SDCtcutzKssxW5a1IF7-Q4vilHrA_WNn64mUDJ2ZZoew3LXh3m-19Kfwo5xxJVJ0OmOQPX1aK56CkF3QBTfxWlEodjjOAAtbdRsMnakzvmE-6wrf8LV6d"/>
 </div>
-<div class="space-y-6 leading-relaxed text-slate-800 dark:text-slate-200 text-lg">
-<p>
-                            Digital architecture refers to the use of computer-based media in the design and construction process.
-                            <span class="bg-grammar-highlight border-b-2 border-yellow-400 px-0.5 rounded-sm">This systems has</span> revolutionized the way we perceive space and structure.
-                            The integration of parametric modeling allows architects to explore complex geometries that were previously
-                            <span class="bg-semantic-highlight border-b-2 border-blue-400 px-0.5 rounded-sm">too hard to imagine</span>.
-                        </p>
-<p>
-                            Historically, drawings <span class="bg-grammar-highlight border-b-2 border-yellow-400 px-0.5 rounded-sm">was</span> restricted to two-dimensional planes.
-                            Today, immersive technologies like VR and AR provide a multi-dimensional perspective, bridging the gap between
-                            the virtual and physical realms.
-                        </p>
-<p>
-                            One of the most significant advancements <span class="bg-semantic-highlight border-b-2 border-blue-400 px-0.5 rounded-sm">is the thing about sustainability</span>.
-                            Software can now predict energy consumption and material waste during the conceptual phase,
-                            ensuring that modern structures are as efficient as they are aesthetically pleasing.
-                        </p>
-<p>
-                            As we look to the future, the role of Artificial Intelligence in generative design promises even greater shifts.
-                            Architects will no longer just be designers of form, but curators of algorithmic possibilities.
-                        </p>
-</div>
-<!-- Floating Zoom Controls (Alternative Style) -->
-<div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-full shadow-xl">
-<span class="text-xs font-bold text-slate-400 px-2">PAGE 1 OF 4</span>
-<div class="h-4 w-px bg-slate-200"></div>
-<button class="text-slate-600 hover:text-primary transition-colors"><span class="material-symbols-outlined">keyboard_arrow_up</span></button>
-<button class="text-slate-600 hover:text-primary transition-colors"><span class="material-symbols-outlined">keyboard_arrow_down</span></button>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-slate-900 dark:text-white truncate">Alex Miller</p>
+<p class="text-xs text-slate-500 truncate">Premium Plan</p>
 </div>
 </div>
-</div>
-<!-- Right: Suggestions Sidebar -->
-<aside class="w-[400px] border-l border-primary/10 bg-white dark:bg-slate-900 flex flex-col shrink-0">
-<div class="p-6 border-b border-primary/10">
-<div class="flex items-center justify-between mb-4">
-<h3 class="text-lg font-bold">Suggestions</h3>
-<span class="bg-primary/10 text-primary px-2 py-0.5 rounded-lg text-xs font-bold">4 Found</span>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 py-1.5 px-3 rounded-lg bg-primary/10 text-primary text-xs font-bold ring-1 ring-primary/20">All</button>
-<button class="flex-1 py-1.5 px-3 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-colors">Grammar</button>
-<button class="flex-1 py-1.5 px-3 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-colors">Semantics</button>
-</div>
-</div>
-<div class="flex-1 overflow-y-auto p-4 space-y-4">
-<!-- Suggestion Card 1 (Grammar) -->
-<div class="group relative rounded-xl border border-yellow-400/30 bg-yellow-50/30 dark:bg-yellow-900/10 p-4 transition-all hover:shadow-md hover:border-yellow-400/50">
-<div class="flex items-start justify-between mb-2">
-<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-600 dark:text-yellow-500">
-<span class="material-symbols-outlined text-xs">spellcheck</span> Grammar
-                            </span>
-<button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity">
-<span class="material-symbols-outlined text-sm">close</span>
-</button>
-</div>
-<h4 class="font-bold text-sm mb-1 text-slate-900 dark:text-slate-100">Subject-Verb Agreement</h4>
-<p class="text-xs text-slate-600 dark:text-slate-400 mb-3">The singular subject "systems" requires the verb "have" or the subject should be "system".</p>
-<div class="flex items-center gap-2 mb-4">
-<span class="line-through text-xs text-red-500">This systems has</span>
-<span class="material-symbols-outlined text-xs text-slate-400">arrow_forward</span>
-<span class="text-xs font-bold text-green-600">These systems have</span>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-white">Accept</button>
-<button class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 text-xs font-bold">Ignore</button>
-</div>
-</div>
-<!-- Suggestion Card 2 (Semantics) -->
-<div class="group relative rounded-xl border border-blue-400/30 bg-blue-50/30 dark:bg-blue-900/10 p-4 transition-all hover:shadow-md hover:border-blue-400/50">
-<div class="flex items-start justify-between mb-2">
-<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-500">
-<span class="material-symbols-outlined text-xs">auto_fix_high</span> Semantics
-                            </span>
-<button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity">
-<span class="material-symbols-outlined text-sm">close</span>
-</button>
-</div>
-<h4 class="font-bold text-sm mb-1 text-slate-900 dark:text-slate-100">Word Choice</h4>
-<p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Consider using a more academic phrasing for better impact.</p>
-<div class="flex items-center gap-2 mb-4">
-<span class="text-xs text-slate-500 italic">"too hard to imagine"</span>
-<span class="material-symbols-outlined text-xs text-slate-400">arrow_forward</span>
-<span class="text-xs font-bold text-blue-700 dark:text-blue-400">inconceivable</span>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-white">Accept</button>
-<button class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 text-xs font-bold">Ignore</button>
-</div>
-</div>
-<!-- Suggestion Card 3 (Grammar) -->
-<div class="group relative rounded-xl border border-yellow-400/30 bg-yellow-50/30 dark:bg-yellow-900/10 p-4 transition-all hover:shadow-md hover:border-yellow-400/50">
-<div class="flex items-start justify-between mb-2">
-<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-yellow-600 dark:text-yellow-500">
-<span class="material-symbols-outlined text-xs">spellcheck</span> Grammar
-                            </span>
-<button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity">
-<span class="material-symbols-outlined text-sm">close</span>
-</button>
-</div>
-<h4 class="font-bold text-sm mb-1 text-slate-900 dark:text-slate-100">Verb Tense</h4>
-<p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Plural subject "drawings" should be paired with "were".</p>
-<div class="flex items-center gap-2 mb-4">
-<span class="line-through text-xs text-red-500">drawings was</span>
-<span class="material-symbols-outlined text-xs text-slate-400">arrow_forward</span>
-<span class="text-xs font-bold text-green-600">drawings were</span>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-white">Accept</button>
-</div>
-</div>
-<!-- Suggestion Card 4 (Semantics) -->
-<div class="group relative rounded-xl border border-blue-400/30 bg-blue-50/30 dark:bg-blue-900/10 p-4 transition-all hover:shadow-md hover:border-blue-400/50">
-<div class="flex items-start justify-between mb-2">
-<span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-500">
-<span class="material-symbols-outlined text-xs">auto_fix_high</span> Semantics
-                            </span>
-</div>
-<h4 class="font-bold text-sm mb-1 text-slate-900 dark:text-slate-100">Conciseness</h4>
-<p class="text-xs text-slate-600 dark:text-slate-400 mb-3">Redundant phrasing. Use a more direct subject.</p>
-<div class="flex items-center gap-2 mb-4">
-<span class="text-xs text-slate-500 italic">"is the thing about sustainability"</span>
-<span class="material-symbols-outlined text-xs text-slate-400">arrow_forward</span>
-<span class="text-xs font-bold text-blue-700 dark:text-blue-400">is sustainability</span>
-</div>
-<div class="flex gap-2">
-<button class="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-white">Accept</button>
-</div>
-</div>
-</div>
-<div class="p-6 border-t border-primary/10 bg-slate-50 dark:bg-slate-950/50">
-<div class="mb-4">
-<div class="flex justify-between text-xs font-bold mb-1">
-<span class="text-slate-500">Total Progress</span>
-<span class="text-primary">0%</span>
-</div>
-<div class="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-<div class="h-full bg-primary w-0 rounded-full"></div>
-</div>
-</div>
-<button class="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary/30 py-3 text-xs font-bold text-primary hover:bg-primary/5 transition-colors">
-<span class="material-symbols-outlined text-[18px]">add</span>
-<span>Add Custom Note</span>
-</button>
 </div>
 </aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-500" placeholder="Search documents..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3 ml-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 max-w-7xl mx-auto w-full">
+<!-- Upload Area -->
+<div class="mb-10">
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Dashboard</h2>
+<div id="dropzone" class="bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all hover:border-primary/40 group cursor-pointer">
+<div class="size-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl">cloud_upload</span>
+</div>
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Upload New PDF</h3>
+<p class="text-slate-500 dark:text-slate-400 mt-1 mb-6 max-w-sm">Drag and drop your PDF files here, or click to browse from your computer.</p>
+<button id="browseBtn" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+                            Browse Files
+                        </button>
+</div>
+<div id="statusMessage" class="mt-4 text-sm font-medium text-primary hidden"></div>
+</div>
+<!-- Recent Documents Section -->
+<div>
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Recent Documents</h3>
+<button class="text-primary text-sm font-semibold hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Doc Card 1 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
+<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
+<div class="w-full h-full flex items-center justify-center p-6">
+<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Visual thumbnail preview of a document page with text and charts" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1thG-lix7H00XWKtK7DxFsJErmos2TVDradLyTVZnWv9VyI0afd8pi7P_0JUH9QPCJ6-Osv6IMaI4I7RJUzSI3ZVMBWI8Kc73hhrgc804QcdeG7F37qOR3ztcfOMu4bn6im8qP_ev1fuysb9pUuCGesGQ5ajRzEMdZ4-q-GsAiKGpiQ50uXjOFqZyC3CsVdrdzZKfNwsdQqVWMPWGPPt4aSNGz8p4BGkNiYIQFrVzz5xzDjYsondFDjx0RC46IQ6qevZcweUesi1F"/>
+</div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-white truncate">Q4 Project Report.pdf</h4>
+<p class="text-xs text-slate-500 mt-1">Edited 2h ago</p>
+</div>
+<!-- Doc Card 2 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
+<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
+<div class="w-full h-full flex items-center justify-center p-6">
+<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Document thumbnail with minimalist layout and typography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwUwk6AINL86S-PR9Kn0FKTX9-z8HfrI90xgX87_PxCqtVScrwz8rExrASY_wvJwe-Ri657r5TAT_UTAEsVk3l181JXWnT7uT24qUGENhKZA75JPcqy09g-RQh3MCzZ-xlFWhB_sw0Ib_d5JhPsnvP4_p4607s6xemBoXtgfqcyXkliw5lnTJoFjHcSBpgRRdwS7QcqJ5ZqgbkjYsiT2oSZP7Ja03QqZpBKt5a0fZA9bEBeVEQVS2zQJwMfFgPglkigAzFveD6ujj6"/>
+</div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-white truncate">User Feedback Analysis.pdf</h4>
+<p class="text-xs text-slate-500 mt-1">Edited 5h ago</p>
+</div>
+<!-- Doc Card 3 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
+<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
+<div class="w-full h-full flex items-center justify-center p-6">
+<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Technical document thumbnail with blue abstract shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKr2R0sV0ni8Z6OUS5_vwSpL0_mS8RspPMcqHgKSI8VA1ovhPbxBwJpAMsfCbHS17qj6rvAQYy6Nze9CcxWvH_9uNc3PtXP_QGUrKCQnLxSUUZJ6nSwW-1-m6B5-lRhb8YA6WOAcfbw9aS_accBpQ2230ih6v3ACnIhQGpUhOddt-am4zQZBCEqjo2_dzj0G5nspCx-lomU0dagyQVhSosHOQMfW-gm5ifr179TR_KkijwC6t0eNvOr3FseA1KFafXuX9bL6HWjr1E"/>
+</div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-white truncate">Budget Plan 2024.pdf</h4>
+<p class="text-xs text-slate-500 mt-1">Edited yesterday</p>
+</div>
+<!-- Doc Card 4 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
+<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
+<div class="w-full h-full flex items-center justify-center p-6">
+<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Dark themed document cover with purple accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXE9XNka05Ylasj-XE9UQPn7X6r67Y9Z7xhKVm_IkF2zpKzVCozWS8mjQDzUa08oAS83KWyv0Lr6YyPj1n9xmHzPSnC_8f6X-uHMGsy83EIBHusQtOUkuVQfMH3bVAwMOI3h2MJiSu9QjnBW3MOwPRULg-FoaAFMmVaEu-r2fN9cR9wodgdnejXOIljW6GDxODJRrszVjmv-dnfblHhIxsGFppTrPEB0gA2y-L0-pTbTd25aI_vm2PznIt9sCRH886BJiFXbZsn1iS"/>
+</div>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<h4 class="font-semibold text-slate-900 dark:text-white truncate">Onboarding Guide.pdf</h4>
+<p class="text-xs text-slate-500 mt-1">Edited Oct 12</p>
+</div>
+</div>
+</div>
+<!-- Secondary Info Section -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<h4 class="font-bold text-slate-900 dark:text-white">Revision Activity</h4>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">You have reviewed 12 documents this week. Keep going!</p>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full w-[65%]"></div>
+</div>
+<div class="flex justify-between mt-2">
+<span class="text-xs text-slate-400">Weekly Goal: 20 Docs</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white">65%</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white mb-1">Get Unlimited Revisions</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Upgrade to Pro for advanced AI features.</p>
+<button class="mt-4 text-primary font-bold text-sm">Upgrade Now →</button>
+</div>
+<div class="size-20 bg-primary/5 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">auto_awesome</span>
+</div>
+</div>
+</div>
 </div>
 </main>
 </div>
+
 <script type="module">
+  const { listen } = window.__TAURI__.event;
+  const { Command } = window.__TAURI__.shell;
+  const { open } = window.__TAURI__.dialog;
+
   document.addEventListener('DOMContentLoaded', () => {
-    const reviewAllBtn = document.getElementById('reviewAllBtn');
-    if (reviewAllBtn && window.__TAURI__) {
-      reviewAllBtn.addEventListener('click', async () => {
-        try {
-          // We assume @tauri-apps/api and @tauri-apps/plugin-shell are bundled or available
-          // Since we're in a raw HTML setup, we might need window.__TAURI_INTERNALS__ or similar.
-          // In a bundler setup we would import { Command } from '@tauri-apps/plugin-shell';
-          // But since the config has withGlobalTauri: true, it should be under window.__TAURI__.core.invoke
-          // Wait, the new plugin-shell requires either bundler import or global exposure.
-          // By default withGlobalTauri exposes core and path, but plugins might need direct access.
-          // Let's use the core invoke if needed, or window.__TAURI_PLUGIN_SHELL__.Command if it exists.
+    const statusMessage = document.getElementById('statusMessage');
+    const dropzone = document.getElementById('dropzone');
 
-          // Fallback to window.__TAURI__.shell or window.__TAURI_PLUGIN_SHELL__ if available.
-          const Command = (window.__TAURI__.shell && window.__TAURI__.shell.Command)
-                          || (window.__TAURI_PLUGIN_SHELL__ && window.__TAURI_PLUGIN_SHELL__.Command);
+    function showStatus(msg, isError = false) {
+      statusMessage.textContent = msg;
+      statusMessage.className = `mt-4 text-sm font-medium ${isError ? 'text-red-500' : 'text-primary'} block`;
+    }
 
-          if (!Command) {
-             console.error("Tauri shell Command API not found.");
-             return;
+    async function processPdf(filePath) {
+      if (!filePath.toLowerCase().endsWith('.pdf')) {
+        showStatus('Please select a valid PDF file.', true);
+        return;
+      }
+
+      showStatus('Starting processing...');
+      try {
+        const command = Command.sidecar("binaries/pdf_processor", ["aulas", filePath]);
+
+        command.on('close', data => {
+          if (data.code === 0) {
+            showStatus(`Processing complete! Code: ${data.code}`);
+          } else {
+            showStatus(`Processing failed. Code: ${data.code}`, true);
           }
+        });
 
-          console.log("Starting Python sidecar...");
+        command.on('error', error => showStatus(`Error: ${error}`, true));
 
-          const command = Command.sidecar("binaries/pdf_processor", []);
+        await command.spawn();
+      } catch (e) {
+        showStatus(`Failed to execute sidecar: ${e}`, true);
+        console.error(e);
+      }
+    }
 
-          command.on('close', data => {
-            console.log(`command finished with code ${data.code} and signal ${data.signal}`);
+    // File browse button logic
+    const browseBtn = document.getElementById('browseBtn');
+    if (browseBtn) {
+      browseBtn.addEventListener('click', async (e) => {
+        // Prevent event from bubbling up to dropzone if it's nested
+        e.stopPropagation();
+
+        try {
+          const selected = await open({
+            multiple: false,
+            filters: [{
+              name: 'PDF',
+              extensions: ['pdf']
+            }]
           });
 
-          command.on('error', error => console.error(`command error: "${error}"`));
-          command.stdout.on('data', line => console.log(`command stdout: "${line}"`));
-          command.stderr.on('data', line => console.log(`command stderr: "${line}"`));
-
-          // We use execute instead of spawn as spawn requires shell:allow-spawn permission
-          const output = await command.execute();
-          console.log('Sidecar execution finished:', output);
-        } catch (error) {
-          console.error("Failed to execute sidecar:", error);
+          if (selected) {
+            processPdf(selected);
+          }
+        } catch (err) {
+          showStatus(`Failed to open dialog: ${err}`, true);
         }
       });
-    } else {
-      console.warn("Tauri shell API not available or button not found.");
     }
+
+    // Tauri drag and drop events
+    listen('tauri://drag-enter', (e) => {
+      dropzone.classList.add('drop-active');
+    });
+
+    listen('tauri://drag-leave', (e) => {
+      dropzone.classList.remove('drop-active');
+    });
+
+    listen('tauri://drag-drop', (e) => {
+      dropzone.classList.remove('drop-active');
+      const payload = e.payload;
+      if (payload && payload.paths && payload.paths.length > 0) {
+        processPdf(payload.paths[0]);
+      }
+    });
   });
 </script>
-</body></html>
+</body>
+</html>

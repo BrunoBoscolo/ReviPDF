@@ -7,12 +7,14 @@
   ],
   "permissions": [
     "core:default",
+    "dialog:default",
     {
       "identifier": "shell:allow-execute",
       "allow": [
         {
           "name": "binaries/pdf_processor",
-          "sidecar": true
+          "sidecar": true,
+          "args": true
         }
       ]
     }
