@@ -85,11 +85,15 @@
     }
 
     const basePath = `../../processed_pdfs/${pdfHash}`;
+    console.log("Using base path for FS:", basePath, "with BaseDirectory.AppLocalData");
     let chapterData = {};
 
     try {
+        console.log(`Attempting to read ${basePath}/chapters.json`);
         const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.AppLocalData });
+        console.log("Successfully read chapters.json", chaptersJson.substring(0, 100) + '...');
         const parsedData = JSON.parse(chaptersJson);
+        console.log("Parsed chapters.json", parsedData);
 
         if (parsedData.chapters_analysis) {
             parsedData.chapters_analysis.forEach((chapObj, idx) => {
@@ -114,6 +118,7 @@
             chapterSelect.appendChild(opt);
         });
     } catch (e) {
+        console.error("Failed to load document structure.", e);
         viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading document structure. ${e}</div>`;
         return;
     }
@@ -147,16 +152,22 @@
         metricsOverview.innerHTML = '<p class="text-slate-500">Loading metrics...</p>';
 
         const aulaPath = `${basePath}/${selectedChap}/${selectedAula}`;
+        console.log(`Loading aula data from path: ${aulaPath}`);
 
         try {
             // Load texts
             const teacherText = await readJsonSafe(`${aulaPath}/teacher.json`);
+            console.log("Loaded teacherText:", teacherText);
             const studentText = await readJsonSafe(`${aulaPath}/student.json`);
+            console.log("Loaded studentText:", studentText);
 
             // Load metrics
             const redundancies = await readJsonSafe(`${aulaPath}/redundancies.json`);
+            console.log("Loaded redundancies:", redundancies);
             const ner = await readJsonSafe(`${aulaPath}/ner_consistency.json`);
+            console.log("Loaded ner:", ner);
             const vocab = await readJsonSafe(`${aulaPath}/vocabulary.json`);
+            console.log("Loaded vocab:", vocab);
 
             let redCount = 0;
             if (redundancies) {
@@ -247,17 +258,21 @@
             }
 
             viewerContent.innerHTML = html;
+            console.log("Successfully rendered content and metrics.");
 
         } catch (err) {
+            console.error("Error loading aula details:", err);
             viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading aula details: ${err}</div>`;
         }
     });
 
     async function readJsonSafe(path) {
         try {
+            console.log(`Reading JSON from: ${path}`);
             const raw = await readTextFile(path, { baseDir: BaseDirectory.AppLocalData });
             return JSON.parse(raw);
         } catch (e) {
+            console.warn(`Failed to read or parse JSON at ${path}:`, e);
             return null; // File might not exist
         }
     }
