@@ -223,7 +223,7 @@
   const { listen } = window.__TAURI__.event;
   const { Command } = window.__TAURI__.shell;
   const { open } = window.__TAURI__.dialog;
-  const { join, appLocalDataDir } = window.__TAURI__.path;
+  const { join, tempDir } = window.__TAURI__.path;
   const { readTextFile, BaseDirectory } = window.__TAURI__.fs;
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -250,8 +250,8 @@
 
       showStatus('Starting processing...');
       try {
-        const appLocalDataDirPath = await appLocalDataDir();
-        const hashFilePath = await join(appLocalDataDirPath, 'last_hash.txt');
+        const systemTempDir = await tempDir();
+        const hashFilePath = await join(systemTempDir, `pdf_hash_${Date.now()}.txt`);
 
         const command = Command.sidecar("binaries/pdf_processor", ["aulas", filePath, "--hash-output", hashFilePath]);
 
@@ -267,13 +267,13 @@
         console.log("Sidecar exit code:", output.code);
 
         try {
-          const hashFileContent = await readTextFile('last_hash.txt', { baseDir: BaseDirectory.AppLocalData });
+          const hashFileContent = await readTextFile(hashFilePath);
           if (hashFileContent && hashFileContent.trim()) {
             capturedHash = hashFileContent.trim();
             console.log("Captured pdfHash from file:", capturedHash);
           }
         } catch (e) {
-          console.error("Failed to read hash output file:", e);
+          console.error("Failed to read hash output file at:", hashFilePath, e);
         }
 
         if (!capturedHash) {
