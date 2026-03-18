@@ -1,17 +1,4 @@
 #!/usr/bin/env python3
-import os
-import sys
-
-# Override PyInstaller/PyMuPDF temp extraction directory specifically for Tauri to avoid
-# "decompression resulted in return code -1" caused by overlapping processes or locked %TEMP%.
-if getattr(sys, 'frozen', False):
-    import tempfile
-    custom_tmp = os.path.join(tempfile.gettempdir(), f"pymupdf_{os.getpid()}")
-    os.environ["PYMUPDF_TEMP"] = custom_tmp
-    os.environ["TEMP"] = custom_tmp
-    os.environ["TMP"] = custom_tmp
-    os.makedirs(custom_tmp, exist_ok=True)
-
 import fitz  # PyMuPDF
 import spacy
 from langdetect import detect, DetectorFactory
@@ -468,8 +455,6 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
 
     print(f"Pedagogic comparison data successfully exported to {output_json}")
     return response_data
-    import sys
-    sys.stdout.flush()
 
 
 def process_pdf_and_export_json(filepath, output_json="response.json"):
@@ -508,8 +493,6 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
 
     print(f"Data successfully exported to {output_json}")
     return response_data
-    import sys
-    sys.stdout.flush()
 
 
 def parse_aulas(extracted_data):
@@ -843,9 +826,7 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
     # Note: JSON structure dumped to stdout for integration with Tauri frontend
-    import sys
     print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}))
-    sys.stdout.flush()
     return response_data
 
 if __name__ == "__main__":

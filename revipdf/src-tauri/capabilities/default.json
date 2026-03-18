@@ -7,8 +7,28 @@
   ],
   "permissions": [
     "core:default",
+    "dialog:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-read",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
     {
       "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/pdf_processor",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
       "allow": [
         {
           "name": "binaries/pdf_processor",

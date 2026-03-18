@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PDF Revise - Document Review</title>
+    <link href="output.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        #content-area { height: calc(100vh - 4rem); overflow-y: auto; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+
+<!-- Sidebar Selection Area -->
+<aside class="w-80 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 shrink-0">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+        <a href="index.html" class="p-2 hover:bg-slate-100 rounded-lg"><span class="material-symbols-outlined">arrow_back</span></a>
+        <h1 class="font-bold text-lg">Document Review</h1>
+    </div>
+
+    <!-- Selections -->
+    <div class="p-6 space-y-6 flex-1 overflow-y-auto">
+        <div>
+            <label class="block text-sm font-semibold mb-2">Select Chapter</label>
+            <select id="chapterSelect" class="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-lg p-3 focus:ring-2 focus:ring-primary/20">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold mb-2">Select Aula</label>
+            <select id="aulaSelect" class="w-full bg-slate-100 dark:bg-slate-900 border-none rounded-lg p-3 focus:ring-2 focus:ring-primary/20" disabled>
+                <option value="">Select a Chapter first</option>
+            </select>
+        </div>
+
+        <div class="pt-6 border-t border-slate-200 dark:border-slate-800">
+            <h3 class="font-bold text-sm text-slate-500 mb-4 uppercase tracking-wider">Metrics Overview</h3>
+            <div id="metricsOverview" class="space-y-4">
+                <p class="text-sm text-slate-500 italic">Select an aula to view metrics</p>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900" id="content-area">
+    <header class="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-8 bg-white dark:bg-slate-950 sticky top-0 z-10">
+        <h2 id="contentTitle" class="text-lg font-bold">Content Viewer</h2>
+    </header>
+
+    <div class="p-8 max-w-5xl mx-auto w-full">
+        <!-- Content Sections -->
+        <div id="viewerContent" class="space-y-8">
+            <div class="text-center text-slate-500 py-20">
+                <span class="material-symbols-outlined text-4xl mb-4">search</span>
+                <p>Select a Chapter and Aula to view extracted content and analysis.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+</div>
+
+<script type="module">
+  console.log("Loading review page scripts...");
+  const { readTextFile, BaseDirectory } = window.__TAURI__.fs;
+  console.log("FS module loaded:", !!readTextFile, !!BaseDirectory);
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    console.log("DOM loaded in review.html");
+    const chapterSelect = document.getElementById('chapterSelect');
+    const aulaSelect = document.getElementById('aulaSelect');
+    const viewerContent = document.getElementById('viewerContent');
+    const contentTitle = document.getElementById('contentTitle');
+    const metricsOverview = document.getElementById('metricsOverview');
+
+    const pdfHash = localStorage.getItem('currentPdfHash');
+    console.log("Retrieved pdfHash from localStorage:", pdfHash);
+
+    if (!pdfHash) {
+        viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">No recent processed document found. Please go back and upload a PDF.</div>`;
+        return;
+    }
+
+    const basePath = `../../processed_pdfs/${pdfHash}`;
+    console.log("Using base path for FS:", basePath, "with BaseDirectory.AppLocalData");
+    let chapterData = {};
+
+    try {
+        console.log(`Attempting to read ${basePath}/chapters.json`);
+        const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.AppLocalData });
+        console.log("Successfully read chapters.json", chaptersJson.substring(0, 100) + '...');
+        const parsedData = JSON.parse(chaptersJson);
+        console.log("Parsed chapters.json", parsedData);
+
+        if (parsedData.chapters_analysis) {
+            parsedData.chapters_analysis.forEach((chapObj, idx) => {
+                const chapNum = String(idx + 1).padStart(2, '0');
+                const chapterKey = `Chapter_${chapNum}`;
+
+                const aulasList = [];
+                if (chapObj.aulas) {
+                    chapObj.aulas.forEach((_, aidx) => {
+                        aulasList.push(`Aula_${String(aidx + 1).padStart(2, '0')}`);
+                    });
+                }
+                chapterData[chapterKey] = { aulas: aulasList };
+            });
+        }
+
+        chapterSelect.innerHTML = '<option value="">-- Choose Chapter --</option>';
+        Object.keys(chapterData).forEach(chapterKey => {
+            const opt = document.createElement('option');
+            opt.value = chapterKey;
+            opt.textContent = chapterKey.replace('_', ' ');
+            chapterSelect.appendChild(opt);
+        });
+    } catch (e) {
+        console.error("Failed to load document structure.", e);
+        viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading document structure. ${e}</div>`;
+        return;
+    }
+
+    chapterSelect.addEventListener('change', () => {
+        const selectedChap = chapterSelect.value;
+        if (!selectedChap) {
+            aulaSelect.disabled = true;
+            aulaSelect.innerHTML = '<option value="">Select a Chapter first</option>';
+            return;
+        }
+
+        aulaSelect.disabled = false;
+        aulaSelect.innerHTML = '<option value="">-- Choose Aula --</option>';
+        const aulas = chapterData[selectedChap].aulas || [];
+        aulas.forEach((aula, idx) => {
+            const opt = document.createElement('option');
+            opt.value = aula;
+            opt.textContent = `Aula ${aula.replace('Aula_', '')}`;
+            aulaSelect.appendChild(opt);
+        });
+    });
+
+    aulaSelect.addEventListener('change', async () => {
+        const selectedChap = chapterSelect.value;
+        const selectedAula = aulaSelect.value;
+        if (!selectedChap || !selectedAula) return;
+
+        contentTitle.textContent = `${chapterSelect.options[chapterSelect.selectedIndex].text} - ${aulaSelect.options[aulaSelect.selectedIndex].text}`;
+        viewerContent.innerHTML = '<p class="text-slate-500">Loading content...</p>';
+        metricsOverview.innerHTML = '<p class="text-slate-500">Loading metrics...</p>';
+
+        const aulaPath = `${basePath}/${selectedChap}/${selectedAula}`;
+        console.log(`Loading aula data from path: ${aulaPath}`);
+
+        try {
+            // Load texts
+            const teacherText = await readJsonSafe(`${aulaPath}/teacher.json`);
+            console.log("Loaded teacherText:", teacherText);
+            const studentText = await readJsonSafe(`${aulaPath}/student.json`);
+            console.log("Loaded studentText:", studentText);
+
+            // Load metrics
+            const redundancies = await readJsonSafe(`${aulaPath}/redundancies.json`);
+            console.log("Loaded redundancies:", redundancies);
+            const ner = await readJsonSafe(`${aulaPath}/ner_consistency.json`);
+            console.log("Loaded ner:", ner);
+            const vocab = await readJsonSafe(`${aulaPath}/vocabulary.json`);
+            console.log("Loaded vocab:", vocab);
+
+            let redCount = 0;
+            if (redundancies) {
+                if (redundancies.guia_do_professor) redCount += redundancies.guia_do_professor.length;
+                if (redundancies.conteudo_do_aluno) redCount += redundancies.conteudo_do_aluno.length;
+            }
+
+            let nerConsistency = 'N/A';
+            if (ner && ner.guia_vs_conteudo && typeof ner.guia_vs_conteudo.consistency_score !== 'undefined') {
+                nerConsistency = (ner.guia_vs_conteudo.consistency_score * 100).toFixed(1) + '%';
+            }
+
+            // Build Metrics View
+            metricsOverview.innerHTML = `
+                <div class="bg-primary/5 p-4 rounded-lg">
+                    <span class="text-xs font-bold text-primary block mb-1">Redundancies</span>
+                    <span class="text-lg font-bold">${redCount}</span> pairs found
+                </div>
+                <div class="bg-primary/5 p-4 rounded-lg">
+                    <span class="text-xs font-bold text-primary block mb-1">Teacher Zipf Avg</span>
+                    <span class="text-lg font-bold">${vocab ? (vocab.guia_do_professor?.readability_avg_zipf?.toFixed(2) || 'N/A') : 'N/A'}</span>
+                </div>
+                <div class="bg-primary/5 p-4 rounded-lg">
+                    <span class="text-xs font-bold text-primary block mb-1">NER Consistency</span>
+                    <span class="text-lg font-bold">${nerConsistency}</span>
+                </div>
+            `;
+
+            // Build Content View
+            let html = '<div class="grid grid-cols-2 gap-8">';
+
+            // Teacher Column
+            html += '<div class="space-y-4">';
+            html += '<h3 class="text-xl font-bold border-b pb-2">Teacher Material</h3>';
+            if (teacherText && teacherText.length > 0) {
+                teacherText.forEach(p => {
+                    html += `<div class="p-4 bg-slate-50 dark:bg-slate-800 rounded shadow-sm">
+                                <span class="text-xs text-slate-400 block mb-2">ID: ${p.id} | Page: ${p.page}</span>
+                                <p class="text-sm">${p.text}</p>
+                             </div>`;
+                });
+            } else {
+                html += '<p class="text-slate-500 italic">No teacher content found.</p>';
+            }
+            html += '</div>';
+
+            // Student Column
+            html += '<div class="space-y-4">';
+            html += '<h3 class="text-xl font-bold border-b pb-2">Student Material</h3>';
+            if (studentText && studentText.length > 0) {
+                studentText.forEach(p => {
+                    html += `<div class="p-4 bg-slate-50 dark:bg-slate-800 rounded shadow-sm">
+                                <span class="text-xs text-slate-400 block mb-2">ID: ${p.id} | Page: ${p.page}</span>
+                                <p class="text-sm">${p.text}</p>
+                             </div>`;
+                });
+            } else {
+                html += '<p class="text-slate-500 italic">No student content found.</p>';
+            }
+            html += '</div>';
+
+            html += '</div>';
+
+            // Redundancies section below
+            let allRedundancies = [];
+            if (redundancies) {
+                if (redundancies.guia_do_professor) allRedundancies.push(...redundancies.guia_do_professor);
+                if (redundancies.conteudo_do_aluno) allRedundancies.push(...redundancies.conteudo_do_aluno);
+            }
+
+            if (allRedundancies.length > 0) {
+                html += '<div class="mt-12">';
+                html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-red-600">Detected Redundancies</h3>';
+                allRedundancies.forEach(pair => {
+                    html += `
+                        <div class="p-4 mb-4 border border-red-200 bg-red-50 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold bg-red-200 text-red-800 px-2 py-1 rounded">Similarity: ${(pair.score * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm mt-3">
+                                <div><strong class="text-red-800">P1 (${pair.para1.id}):</strong> ${pair.para1.text}</div>
+                                <div><strong class="text-red-800">P2 (${pair.para2.id}):</strong> ${pair.para2.text}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            viewerContent.innerHTML = html;
+            console.log("Successfully rendered content and metrics.");
+
+        } catch (err) {
+            console.error("Error loading aula details:", err);
+            viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading aula details: ${err}</div>`;
+        }
+    });
+
+    async function readJsonSafe(path) {
+        try {
+            console.log(`Reading JSON from: ${path}`);
+            const raw = await readTextFile(path, { baseDir: BaseDirectory.AppLocalData });
+            return JSON.parse(raw);
+        } catch (e) {
+            console.warn(`Failed to read or parse JSON at ${path}:`, e);
+            return null; // File might not exist
+        }
+    }
+  });
+</script>
+</body>
+</html>
