@@ -1,0 +1,10 @@
+--- serve_and_test2.py
++++ serve_and_test2.py
+@@ -35,6 +35,7 @@
+                 }
+             },
+             fs: {
++                BaseDirectory: { AppLocalData: 1 },
+                 readTextFile: async (path) => {
+                     console.log('Mock readTextFile:', path);
+                     if (path.includes('chapters.json')) {

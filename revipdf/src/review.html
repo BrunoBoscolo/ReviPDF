@@ -84,12 +84,27 @@
         return;
     }
 
-    const basePath = `processed_pdfs/${pdfHash}`;
+    const basePath = `../../processed_pdfs/${pdfHash}`;
     let chapterData = {};
 
     try {
-        const chaptersJson = await readTextFile(`${basePath}/chapters.json`);
-        chapterData = JSON.parse(chaptersJson);
+        const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.AppLocalData });
+        const parsedData = JSON.parse(chaptersJson);
+
+        if (parsedData.chapters_analysis) {
+            parsedData.chapters_analysis.forEach((chapObj, idx) => {
+                const chapNum = String(idx + 1).padStart(2, '0');
+                const chapterKey = `Chapter_${chapNum}`;
+
+                const aulasList = [];
+                if (chapObj.aulas) {
+                    chapObj.aulas.forEach((_, aidx) => {
+                        aulasList.push(`Aula_${String(aidx + 1).padStart(2, '0')}`);
+                    });
+                }
+                chapterData[chapterKey] = { aulas: aulasList };
+            });
+        }
 
         chapterSelect.innerHTML = '<option value="">-- Choose Chapter --</option>';
         Object.keys(chapterData).forEach(chapterKey => {
@@ -240,7 +255,7 @@
 
     async function readJsonSafe(path) {
         try {
-            const raw = await readTextFile(path);
+            const raw = await readTextFile(path, { baseDir: BaseDirectory.AppLocalData });
             return JSON.parse(raw);
         } catch (e) {
             return null; // File might not exist
