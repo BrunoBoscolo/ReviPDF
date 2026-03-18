@@ -223,6 +223,8 @@
   const { listen } = window.__TAURI__.event;
   const { Command } = window.__TAURI__.shell;
   const { open } = window.__TAURI__.dialog;
+  const { join, appLocalDataDir } = window.__TAURI__.path;
+  const { readTextFile, BaseDirectory } = window.__TAURI__.fs;
 
   document.addEventListener('DOMContentLoaded', () => {
     const statusMessage = document.createElement('div');
@@ -248,10 +250,14 @@
 
       showStatus('Starting processing...');
       try {
-        const command = Command.sidecar("binaries/pdf_processor", ["aulas", filePath]);
+        const appLocalDataDirPath = await appLocalDataDir();
+        const hashFilePath = await join(appLocalDataDirPath, 'last_hash.txt');
+
+        const command = Command.sidecar("binaries/pdf_processor", ["aulas", filePath, "--hash-output", hashFilePath]);
 
         let capturedHash = null;
         console.log("Executing sidecar command...");
+        console.log("Saving hash to:", hashFilePath);
 
         const output = await command.execute();
 
@@ -260,23 +266,35 @@
         console.log("Sidecar stderr:", output.stderr);
         console.log("Sidecar exit code:", output.code);
 
-        const parts = output.stdout.split('\n');
-        console.log(`Split stdout into ${parts.length} parts`);
+        try {
+          const hashFileContent = await readTextFile('last_hash.txt', { baseDir: BaseDirectory.AppLocalData });
+          if (hashFileContent && hashFileContent.trim()) {
+            capturedHash = hashFileContent.trim();
+            console.log("Captured pdfHash from file:", capturedHash);
+          }
+        } catch (e) {
+          console.error("Failed to read hash output file:", e);
+        }
 
-        for (const part of parts) {
-          const trimmed = part.trim();
-          if (!trimmed) continue;
+        if (!capturedHash) {
+          const parts = output.stdout.split('\n');
+          console.log(`Split stdout into ${parts.length} parts for fallback`);
 
-          try {
-            console.log("Attempting to parse:", trimmed);
-            const parsed = JSON.parse(trimmed);
-            console.log("Parsed JSON:", parsed);
-            if (parsed && parsed.pdf_hash) {
-              console.log("Captured pdfHash from stdout:", parsed.pdf_hash);
-              capturedHash = parsed.pdf_hash;
+          for (const part of parts) {
+            const trimmed = part.trim();
+            if (!trimmed) continue;
+
+            try {
+              console.log("Attempting to parse:", trimmed);
+              const parsed = JSON.parse(trimmed);
+              console.log("Parsed JSON:", parsed);
+              if (parsed && parsed.pdf_hash) {
+                console.log("Captured pdfHash from stdout:", parsed.pdf_hash);
+                capturedHash = parsed.pdf_hash;
+              }
+            } catch (e) {
+              console.log("Failed to parse part as JSON:", trimmed);
             }
-          } catch (e) {
-            console.log("Failed to parse part as JSON:", trimmed);
           }
         }
 
