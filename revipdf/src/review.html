@@ -69,9 +69,12 @@
 </div>
 
 <script type="module">
+  console.log("Loading review page scripts...");
   const { readTextFile, BaseDirectory } = window.__TAURI__.fs;
+  console.log("FS module loaded:", !!readTextFile, !!BaseDirectory);
 
   document.addEventListener('DOMContentLoaded', async () => {
+    console.log("DOM loaded in review.html");
     const chapterSelect = document.getElementById('chapterSelect');
     const aulaSelect = document.getElementById('aulaSelect');
     const viewerContent = document.getElementById('viewerContent');
@@ -79,6 +82,8 @@
     const metricsOverview = document.getElementById('metricsOverview');
 
     const pdfHash = localStorage.getItem('currentPdfHash');
+    console.log("Retrieved pdfHash from localStorage:", pdfHash);
+
     if (!pdfHash) {
         viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">No recent processed document found. Please go back and upload a PDF.</div>`;
         return;
