@@ -251,48 +251,62 @@
         const command = Command.sidecar("binaries/pdf_processor", ["aulas", filePath]);
 
         let capturedHash = null;
+        console.log("Executing sidecar command...");
 
-        command.stdout.on('data', line => {
-          console.log("Sidecar stdout:", line);
-          // Split by newline in case multiple print statements are buffered together
-          const parts = line.split('\n');
-          for (const part of parts) {
-            try {
-              const parsed = JSON.parse(part.trim());
-              if (parsed && parsed.pdf_hash) {
-                console.log("Captured pdfHash from stdout:", parsed.pdf_hash);
-                capturedHash = parsed.pdf_hash;
-              }
-            } catch (e) {
-              // normal stdout line, ignore parse errors
+        const output = await command.execute();
+
+        console.log("Sidecar output:", output);
+        console.log("Sidecar stdout:", output.stdout);
+        console.log("Sidecar stderr:", output.stderr);
+        console.log("Sidecar exit code:", output.code);
+
+        const parts = output.stdout.split('\n');
+        console.log(`Split stdout into ${parts.length} parts`);
+
+        for (const part of parts) {
+          const trimmed = part.trim();
+          if (!trimmed) continue;
+
+          try {
+            console.log("Attempting to parse:", trimmed);
+            const parsed = JSON.parse(trimmed);
+            console.log("Parsed JSON:", parsed);
+            if (parsed && parsed.pdf_hash) {
+              console.log("Captured pdfHash from stdout:", parsed.pdf_hash);
+              capturedHash = parsed.pdf_hash;
             }
+          } catch (e) {
+            console.log("Failed to parse part as JSON:", trimmed);
           }
-        });
+        }
 
-        command.stderr.on('data', line => {
-          console.error("Sidecar stderr:", line);
-        });
-
-        command.on('close', data => {
-          console.log("Sidecar closed with code:", data.code);
-          if (data.code === 0 && capturedHash) {
-            console.log("Setting localStorage and redirecting...");
+        if (output.code === 0 && capturedHash) {
+          console.log("Setting localStorage and redirecting...");
+          try {
             localStorage.setItem('currentPdfHash', capturedHash);
+            console.log("localStorage updated successfully");
+          } catch (storageError) {
+            console.error("Failed to set localStorage:", storageError);
+            // In case localStorage is entirely blocked due to tracking prevention
+            // We can fall back to passing the hash as a URL parameter
+            console.warn("Falling back to URL parameters due to localStorage error.");
             showStatus('Processing complete! Redirecting...');
             setTimeout(() => {
-              window.location.href = 'review.html';
+              window.location.href = `review.html?hash=${capturedHash}`;
             }, 1000);
-          } else if (data.code === 0 && !capturedHash) {
-            showStatus('Processing complete, but could not capture the file hash from stdout.', true);
-            console.error("Missing pdf_hash in stdout despite successful exit code.");
-          } else {
-            showStatus(`Processing failed. Code: ${data.code}`, true);
+            return;
           }
-        });
 
-        command.on('error', error => showStatus(`Error: ${error}`, true));
-
-        await command.spawn();
+          showStatus('Processing complete! Redirecting...');
+          setTimeout(() => {
+            window.location.href = 'review.html';
+          }, 1000);
+        } else if (output.code === 0 && !capturedHash) {
+          showStatus('Processing complete, but could not capture the file hash from stdout.', true);
+          console.error("Missing pdf_hash in stdout despite successful exit code.");
+        } else {
+          showStatus(`Processing failed. Code: ${output.code}`, true);
+        }
       } catch (e) {
         showStatus(`Failed to execute sidecar: ${e}`, true);
         console.error(e);
