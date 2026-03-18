@@ -252,7 +252,10 @@
 
         command.on('close', data => {
           if (data.code === 0) {
-            showStatus(`Processing complete! Code: ${data.code}`);
+            showStatus('Processing complete! Redirecting...');
+            setTimeout(() => {
+              window.location.href = 'review.html';
+            }, 1000);
           } else {
             showStatus(`Processing failed. Code: ${data.code}`, true);
           }
