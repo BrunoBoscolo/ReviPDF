@@ -755,15 +755,25 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
     import json
     import hashlib
 
-    # 1. Get parsed Chapters and Aulas (either extracted fresh or from cache)
-    chapters = extract_and_cache_pdf(filepath)
-
     # Calculate hash to find the root cache directory
     hasher = hashlib.md5()
     with open(filepath, 'rb') as f:
         buf = f.read()
         hasher.update(buf)
     pdf_hash = hasher.hexdigest()
+
+    # Early write of the hash output to ensure the frontend receives it
+    # even if processing fails later (e.g. empty PDF)
+    if hash_output:
+        import sys
+        try:
+            with open(hash_output, 'w', encoding='utf-8') as f:
+                f.write(pdf_hash)
+        except Exception as e:
+            print(f"Failed to write hash output: {e}", file=sys.stderr)
+
+    # 1. Get parsed Chapters and Aulas (either extracted fresh or from cache)
+    chapters = extract_and_cache_pdf(filepath)
 
     # 2. Collect all extracted text to detect language
     # We flatten all sections from all aulas from all chapters to pass to language detection
@@ -844,14 +854,6 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
     # Export to JSON
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
-
-    if hash_output:
-        import sys
-        try:
-            with open(hash_output, 'w', encoding='utf-8') as f:
-                f.write(pdf_hash)
-        except Exception as e:
-            print(f"Failed to write hash output: {e}", file=sys.stderr)
 
     # Note: JSON structure dumped to stdout for integration with Tauri frontend
     import sys
