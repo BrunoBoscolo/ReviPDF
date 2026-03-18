@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+import os
+import sys
+
+# Override PyInstaller/PyMuPDF temp extraction directory specifically for Tauri to avoid
+# "decompression resulted in return code -1" caused by overlapping processes or locked %TEMP%.
+if getattr(sys, 'frozen', False):
+    import tempfile
+    custom_tmp = os.path.join(tempfile.gettempdir(), f"pymupdf_{os.getpid()}")
+    os.environ["PYMUPDF_TEMP"] = custom_tmp
+    os.environ["TEMP"] = custom_tmp
+    os.environ["TMP"] = custom_tmp
+    os.makedirs(custom_tmp, exist_ok=True)
+
 import fitz  # PyMuPDF
 import spacy
 from langdetect import detect, DetectorFactory
