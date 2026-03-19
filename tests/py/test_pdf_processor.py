@@ -88,7 +88,11 @@ class TestPDFProcessor(unittest.TestCase):
             "Capítulo 2 - Animal Biology",
             "Aula 02 - Mammals",
             "1. GUIA DO PROFESSOR",
-            "Mammals are animals."
+            "Mammals are animals.",
+            "CAPÍTULO 3: Fungi Biology",
+            "Aula 03 - Mushrooms",
+            "1. GUIA DO PROFESSOR",
+            "Mushrooms are fungi."
         ]
         cls.create_sample_pdf(cls.test_chapter_aula_pdf, chapter_aula_paragraphs)
 
@@ -291,23 +295,28 @@ class TestPDFProcessor(unittest.TestCase):
 
         chapters = extract_and_cache_pdf(self.test_chapter_aula_pdf)
 
-        self.assertEqual(len(chapters), 2)
+        self.assertEqual(len(chapters), 3)
         self.assertEqual(chapters[0]["number"], "01")
         self.assertEqual(chapters[0]["theme"], "Plant Biology")
         self.assertEqual(chapters[1]["number"], "02")
         self.assertEqual(chapters[1]["theme"], "Animal Biology")
+        self.assertEqual(chapters[2]["number"], "03")
+        self.assertEqual(chapters[2]["theme"], "Fungi Biology")
 
         hasher = hashlib.md5()
         with open(self.test_chapter_aula_pdf, 'rb') as f:
             hasher.update(f.read())
         pdf_hash = hasher.hexdigest()
 
-        base_dir = os.path.join("processed_pdfs", pdf_hash)
+        # Update to match how the cache directory works
+        import tempfile
+        base_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash)
 
         # Verify the directory structure exists
         self.assertTrue(os.path.exists(base_dir))
         self.assertTrue(os.path.exists(os.path.join(base_dir, "chapters.json")))
         self.assertTrue(os.path.exists(os.path.join(base_dir, "Chapter_01", "Aula_01", "teacher.json")))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "Chapter_03", "Aula_03", "teacher.json")))
         self.assertTrue(os.path.exists(os.path.join(base_dir, "Chapter_02", "Aula_02", "teacher.json")))
 
     def test_pipeline_designer_instructions(self):
