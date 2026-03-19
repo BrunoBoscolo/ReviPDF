@@ -20,6 +20,20 @@
         },
         {
           "path": "$TEMP/**"
+        },
+        {
+          "path": "$TEMP/ReviPDF_Cache/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        },
+        {
+          "path": "$TEMP/**"
         }
       ]
     },

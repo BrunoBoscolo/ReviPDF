@@ -100,13 +100,13 @@
         return;
     }
 
-    const basePath = `../../processed_pdfs/${pdfHash}`;
+    const basePath = `ReviPDF_Cache/${pdfHash}`;
     console.log("Using base path for FS:", basePath, "with BaseDirectory.AppLocalData");
     let chapterData = {};
 
     try {
         console.log(`Attempting to read ${basePath}/chapters.json`);
-        const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.AppLocalData });
+        const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.Temp });
         console.log("Successfully read chapters.json", chaptersJson.substring(0, 100) + '...');
         const parsedData = JSON.parse(chaptersJson);
         console.log("Parsed chapters.json", parsedData);
@@ -285,7 +285,7 @@
     async function readJsonSafe(path) {
         try {
             console.log(`Reading JSON from: ${path}`);
-            const raw = await readTextFile(path, { baseDir: BaseDirectory.AppLocalData });
+            const raw = await readTextFile(path, { baseDir: BaseDirectory.Temp });
             return JSON.parse(raw);
         } catch (e) {
             console.warn(`Failed to read or parse JSON at ${path}:`, e);
