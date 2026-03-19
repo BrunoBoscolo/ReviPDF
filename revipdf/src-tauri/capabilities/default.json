@@ -20,6 +20,9 @@
         },
         {
           "path": "$TEMP/**"
+        },
+        {
+          "path": "$TEMP/ReviPDF_Cache/**"
         }
       ]
     },

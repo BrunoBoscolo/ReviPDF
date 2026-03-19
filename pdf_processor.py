@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import tempfile
 
 # Force unbuffered output for robust Tauri IPC
 os.environ["PYTHONUNBUFFERED"] = "1"
@@ -28,14 +29,37 @@ DetectorFactory.seed = 0
 def load_spacy_model(model_name):
     """
     Helper function to load a spaCy model. If it's not installed,
-    it will attempt to download it programmatically before loading.
+    it will attempt to download it programmatically before loading
+    (only if NOT running as a frozen PyInstaller executable).
     """
-    try:
-        return spacy.load(model_name)
-    except OSError:
-        print(f"Model '{model_name}' not found. Downloading it now...")
-        spacy.cli.download(model_name)
-        return spacy.load(model_name)
+    import sys
+    
+    # 1. Se estiver rodando como .exe (Congelado pelo PyInstaller)
+    if getattr(sys, 'frozen', False):
+        try:
+            # A importação direta é a forma oficial de fazer o PyInstaller 
+            # enxergar e empacotar os modelos do spaCy.
+            if model_name == "pt_core_news_lg":
+                import pt_core_news_lg
+                return pt_core_news_lg.load()
+            elif model_name == "en_core_web_lg":
+                import en_core_web_lg
+                return en_core_web_lg.load()
+            else:
+                return spacy.load(model_name)
+        except Exception as e:
+            # Se cair aqui, o .exe vai fechar avisando exatamente o que faltou
+            print(f"Erro Crítico: O modelo '{model_name}' não foi empacotado no executável. Erro: {e}", file=sys.stderr)
+            sys.exit(1)
+            
+    # 2. Se estiver rodando em ambiente de desenvolvimento (Python normal)
+    else:
+        try:
+            return spacy.load(model_name)
+        except OSError:
+            print(f"Model '{model_name}' not found. Downloading it now...")
+            spacy.cli.download(model_name)
+            return spacy.load(model_name)
 
 def detect_language_and_load_model(extracted_data):
     """
@@ -704,7 +728,8 @@ def extract_and_cache_pdf(filepath):
         hasher.update(buf)
     pdf_hash = hasher.hexdigest()
 
-    base_dir = os.path.join("processed_pdfs", pdf_hash)
+    
+    base_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash)
 
     # If cache exists and looks populated (has chapters.json), just load it
     chapters_json_path = os.path.join(base_dir, "chapters.json")
@@ -804,7 +829,7 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
             total_aulas += 1
 
             # Save separate JSONs for the NLP processes inside the chapter/aula directory
-            aula_dir = os.path.join("processed_pdfs", pdf_hash, f"Chapter_{chapter['number']}", f"Aula_{aula['number']}")
+            aula_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash, f"Chapter_{chapter['number']}", f"Aula_{aula['number']}")
             os.makedirs(aula_dir, exist_ok=True)
 
             topic_order = {
