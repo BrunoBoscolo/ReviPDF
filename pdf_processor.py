@@ -547,7 +547,7 @@ def parse_aulas(extracted_data):
     - ATIVIDADES DO ALUNO
     """
     # Tolerant regexes to handle formatting, typos, and numbering variations
-    chapter_re = re.compile(r"(?i)^\s*(?:C[Aa][Pp][ÍiI][Tt][Uu][Ll][Oo]|C[Hh][Aa][Pp][Tt][Ee][Rr])\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
+    chapter_re = re.compile(r"(?i)^\s*(?:C[Aa][Pp][ÍiI][Tt][Uu][Ll][Oo]|C[Hh][Aa][Pp][Tt][Ee][Rr])\s+(\d{1,2})\s*[-–—:]?\s*(.*)$")
     aula_re = re.compile(r"(?i)^\s*A[uU][lL][aA]\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
     sec1_re = re.compile(r"(?i)^\s*(?:1\.?\s*)?GUIA\s+D[OE]\s+PROFESS[OÓ]R\s*$")
     sec2_re = re.compile(r"(?i)^\s*(?:2\.?\s*)?CONTE[ÚU]DO\s+D[OE]\s+LIVRO\s+D[OE]\s+ALUNO(?:\s*\(Exposi[çc][ãa]o\))?\s*$")
