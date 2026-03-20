@@ -216,6 +216,24 @@
                 if (redundancies.conteudo_do_aluno) redCount += redundancies.conteudo_do_aluno.length;
             }
 
+            // Helper functions for human-readable metrics
+            const getReadabilityLabel = (zipf) => {
+                if (zipf === undefined || zipf === null) return 'N/A';
+                if (zipf < 3.0) return 'Very Difficult (Academic/Jargon)';
+                if (zipf < 4.0) return 'Difficult (Advanced)';
+                if (zipf < 5.0) return 'Moderate (Standard)';
+                if (zipf < 6.0) return 'Easy (Common)';
+                return 'Very Easy (Basic)';
+            };
+
+            const getLexicalRichnessLabel = (ttr) => {
+                if (ttr === undefined || ttr === null) return 'N/A';
+                if (ttr < 0.3) return 'Very Repetitive';
+                if (ttr < 0.5) return 'Standard (Repetitive)';
+                if (ttr < 0.7) return 'Rich Vocabulary';
+                return 'Very Rich Vocabulary';
+            };
+
             let nerConsistency = 'N/A';
             let inBothCount = 0;
             let missingInStudentCount = 0;
@@ -244,14 +262,19 @@
             }
 
             // Build Metrics View
+            let readabilityDisplay = 'N/A';
+            if (vocab && vocab.guia_do_professor && vocab.guia_do_professor.readability_avg_zipf !== undefined) {
+                readabilityDisplay = getReadabilityLabel(vocab.guia_do_professor.readability_avg_zipf);
+            }
+
             metricsOverview.innerHTML = `
                 <div class="bg-primary/5 p-4 rounded-lg">
                     <span class="text-xs font-bold text-primary block mb-1">Redundancies</span>
                     <span class="text-lg font-bold">${redCount}</span> pairs found
                 </div>
                 <div class="bg-primary/5 p-4 rounded-lg">
-                    <span class="text-xs font-bold text-primary block mb-1">Teacher Zipf Avg</span>
-                    <span class="text-lg font-bold">${vocab ? (vocab.guia_do_professor?.readability_avg_zipf?.toFixed(2) || 'N/A') : 'N/A'}</span>
+                    <span class="text-xs font-bold text-primary block mb-1">Teacher Readability</span>
+                    <span class="text-lg font-bold">${readabilityDisplay}</span>
                 </div>
                 <div class="bg-primary/5 p-4 rounded-lg">
                     <span class="text-xs font-bold text-primary block mb-1">NER Consistency</span>
@@ -370,12 +393,12 @@
                         html += `
                             <div class="grid grid-cols-2 gap-4 text-sm mb-4">
                                 <div class="bg-purple-50 p-3 rounded border border-purple-100">
-                                    <span class="block text-purple-800 font-bold mb-1">Avg Zipf (Readability)</span>
-                                    ${v.readability_avg_zipf !== undefined ? v.readability_avg_zipf.toFixed(2) : 'N/A'}
+                                    <span class="block text-purple-800 font-bold mb-1">Readability</span>
+                                    ${getReadabilityLabel(v.readability_avg_zipf)}
                                 </div>
                                 <div class="bg-purple-50 p-3 rounded border border-purple-100">
-                                    <span class="block text-purple-800 font-bold mb-1">TTR (Lexical Richness)</span>
-                                    ${v.lexical_richness_ttr !== undefined ? v.lexical_richness_ttr.toFixed(4) : 'N/A'}
+                                    <span class="block text-purple-800 font-bold mb-1">Lexical Richness</span>
+                                    ${getLexicalRichnessLabel(v.lexical_richness_ttr)}
                                 </div>
                             </div>
                         `;
@@ -383,13 +406,13 @@
                         if (v.rare_words_and_jargon && Object.keys(v.rare_words_and_jargon).length > 0) {
                             html += `
                                 <div class="bg-slate-50 p-4 rounded border border-slate-200">
-                                    <strong class="block text-slate-800 mb-2">Unusual Words & Jargon (< 3.5 Zipf)</strong>
+                                    <strong class="block text-slate-800 mb-2">Unusual Words & Jargon</strong>
                                     <div class="flex flex-wrap gap-2">
                             `;
                             // Sort rare words by zipf frequency ascending (rarest first)
                             const rareWords = Object.entries(v.rare_words_and_jargon).sort((a, b) => a[1] - b[1]);
                             rareWords.forEach(([word, zipf]) => {
-                                html += `<span class="px-2 py-1 bg-white border border-slate-300 rounded text-xs" title="Zipf: ${zipf.toFixed(2)}">${word} <span class="text-slate-400">(${zipf.toFixed(1)})</span></span>`;
+                                html += `<span class="px-2 py-1 bg-white border border-slate-300 rounded text-xs">${word}</span>`;
                             });
                             html += `
                                     </div>
