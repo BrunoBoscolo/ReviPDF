@@ -109,28 +109,53 @@
         const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.Temp });
         console.log("Successfully read chapters.json", chaptersJson.substring(0, 100) + '...');
         const parsedData = JSON.parse(chaptersJson);
-        console.log("Parsed chapters.json", parsedData);
+        console.log("Parsed chapters.json details:", JSON.stringify(parsedData, null, 2));
 
-        if (parsedData.chapters_analysis) {
-            parsedData.chapters_analysis.forEach((chapObj, idx) => {
-                const chapNum = String(idx + 1).padStart(2, '0');
+        // The processed data is an array of chapters, not an object with 'chapters_analysis'
+        const chaptersArray = Array.isArray(parsedData) ? parsedData : (parsedData.chapters_analysis || []);
+        console.log(`Found ${chaptersArray.length} chapters to process`);
+
+        if (chaptersArray && chaptersArray.length > 0) {
+            chaptersArray.forEach((chapObj, idx) => {
+                // Use actual chapter number if available, otherwise fallback to index
+                const chapNumRaw = chapObj.number || String(idx + 1);
+                const chapNum = String(chapNumRaw).padStart(2, '0');
                 const chapterKey = `Chapter_${chapNum}`;
 
+                console.log(`Processing chapter: ${chapterKey}, Raw Object:`, chapObj);
+
+                // Extract theme from 'theme' property or 'chapter_info'
+                let theme = chapObj.theme || "";
+                if (!theme && chapObj.chapter_info) {
+                    const match = chapObj.chapter_info.match(/Chapter \d+ - (.*)/i);
+                    if (match && match[1]) {
+                        theme = match[1].trim();
+                    }
+                }
+                const chapterLabel = `Chapter ${chapNum}${theme ? ` - ${theme}` : ''}`;
+                console.log(`Created chapter label: ${chapterLabel}`);
+
                 const aulasList = [];
-                if (chapObj.aulas) {
-                    chapObj.aulas.forEach((_, aidx) => {
-                        aulasList.push(`Aula_${String(aidx + 1).padStart(2, '0')}`);
+                if (chapObj.aulas && Array.isArray(chapObj.aulas)) {
+                    chapObj.aulas.forEach((aulaObj, aidx) => {
+                        // Use actual aula number if available
+                        const aulaNumRaw = aulaObj.number || String(aidx + 1);
+                        const aulaNum = String(aulaNumRaw).padStart(2, '0');
+                        aulasList.push(`Aula_${aulaNum}`);
                     });
                 }
-                chapterData[chapterKey] = { aulas: aulasList };
+                console.log(`Found aulas for ${chapterKey}:`, aulasList);
+                chapterData[chapterKey] = { label: chapterLabel, aulas: aulasList };
             });
+        } else {
+             console.warn("No chapters found in the parsed JSON data.");
         }
 
         chapterSelect.innerHTML = '<option value="">-- Choose Chapter --</option>';
         Object.keys(chapterData).forEach(chapterKey => {
             const opt = document.createElement('option');
             opt.value = chapterKey;
-            opt.textContent = chapterKey.replace('_', ' ');
+            opt.textContent = chapterData[chapterKey].label;
             chapterSelect.appendChild(opt);
         });
     } catch (e) {
