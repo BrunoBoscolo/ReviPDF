@@ -7,8 +7,48 @@
   ],
   "permissions": [
     "core:default",
+    "dialog:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-read",
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": "$APPLOCALDATA/**"
+        },
+        {
+          "path": "$TEMP/**"
+        },
+        {
+          "path": "$TEMP/ReviPDF_Cache/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        },
+        {
+          "path": "$TEMP/**"
+        }
+      ]
+    },
     {
       "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/pdf_processor",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
       "allow": [
         {
           "name": "binaries/pdf_processor",

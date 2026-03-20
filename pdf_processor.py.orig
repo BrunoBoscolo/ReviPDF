@@ -1,21 +1,4 @@
 #!/usr/bin/env python3
-import os
-import sys
-import tempfile
-
-# Force unbuffered output for robust Tauri IPC
-os.environ["PYTHONUNBUFFERED"] = "1"
-
-# Override PyInstaller/PyMuPDF temp extraction directory specifically for Tauri to avoid
-# "decompression resulted in return code -1" caused by overlapping processes or locked %TEMP%.
-if getattr(sys, 'frozen', False):
-    import tempfile
-    custom_tmp = os.path.join(tempfile.gettempdir(), f"pymupdf_{os.getpid()}")
-    os.environ["PYMUPDF_TEMP"] = custom_tmp
-    os.environ["TEMP"] = custom_tmp
-    os.environ["TMP"] = custom_tmp
-    os.makedirs(custom_tmp, exist_ok=True)
-
 import fitz  # PyMuPDF
 import spacy
 from langdetect import detect, DetectorFactory
@@ -29,37 +12,14 @@ DetectorFactory.seed = 0
 def load_spacy_model(model_name):
     """
     Helper function to load a spaCy model. If it's not installed,
-    it will attempt to download it programmatically before loading
-    (only if NOT running as a frozen PyInstaller executable).
+    it will attempt to download it programmatically before loading.
     """
-    import sys
-    
-    # 1. Se estiver rodando como .exe (Congelado pelo PyInstaller)
-    if getattr(sys, 'frozen', False):
-        try:
-            # A importação direta é a forma oficial de fazer o PyInstaller 
-            # enxergar e empacotar os modelos do spaCy.
-            if model_name == "pt_core_news_lg":
-                import pt_core_news_lg
-                return pt_core_news_lg.load()
-            elif model_name == "en_core_web_lg":
-                import en_core_web_lg
-                return en_core_web_lg.load()
-            else:
-                return spacy.load(model_name)
-        except Exception as e:
-            # Se cair aqui, o .exe vai fechar avisando exatamente o que faltou
-            print(f"Erro Crítico: O modelo '{model_name}' não foi empacotado no executável. Erro: {e}", file=sys.stderr)
-            sys.exit(1)
-            
-    # 2. Se estiver rodando em ambiente de desenvolvimento (Python normal)
-    else:
-        try:
-            return spacy.load(model_name)
-        except OSError:
-            print(f"Model '{model_name}' not found. Downloading it now...")
-            spacy.cli.download(model_name)
-            return spacy.load(model_name)
+    try:
+        return spacy.load(model_name)
+    except OSError:
+        print(f"Model '{model_name}' not found. Downloading it now...")
+        spacy.cli.download(model_name)
+        return spacy.load(model_name)
 
 def detect_language_and_load_model(extracted_data):
     """
@@ -493,10 +453,8 @@ def compare_pedagogic_materials(teacher_pdf_path, student_pdf_path, output_json=
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Pedagogic comparison data successfully exported to {output_json}", flush=True)
+    print(f"Pedagogic comparison data successfully exported to {output_json}")
     return response_data
-    import sys
-    sys.stdout.flush()
 
 
 def process_pdf_and_export_json(filepath, output_json="response.json"):
@@ -533,10 +491,8 @@ def process_pdf_and_export_json(filepath, output_json="response.json"):
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
-    print(f"Data successfully exported to {output_json}", flush=True)
+    print(f"Data successfully exported to {output_json}")
     return response_data
-    import sys
-    sys.stdout.flush()
 
 
 def parse_aulas(extracted_data):
@@ -547,7 +503,7 @@ def parse_aulas(extracted_data):
     - ATIVIDADES DO ALUNO
     """
     # Tolerant regexes to handle formatting, typos, and numbering variations
-    chapter_re = re.compile(r"(?i)^\s*(?:C[Aa][Pp][ÍiI][Tt][Uu][Ll][Oo]|C[Hh][Aa][Pp][Tt][Ee][Rr])\s+(\d{1,2})\s*[-–—:]?\s*(.*)$")
+    chapter_re = re.compile(r"(?i)^\s*(?:C[Aa][Pp][ÍiI][Tt][Uu][Ll][Oo]|C[Hh][Aa][Pp][Tt][Ee][Rr])\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
     aula_re = re.compile(r"(?i)^\s*A[uU][lL][aA]\s+(\d{1,2})\s*[-–—]?\s*(.*)$")
     sec1_re = re.compile(r"(?i)^\s*(?:1\.?\s*)?GUIA\s+D[OE]\s+PROFESS[OÓ]R\s*$")
     sec2_re = re.compile(r"(?i)^\s*(?:2\.?\s*)?CONTE[ÚU]DO\s+D[OE]\s+LIVRO\s+D[OE]\s+ALUNO(?:\s*\(Exposi[çc][ãa]o\))?\s*$")
@@ -728,8 +684,7 @@ def extract_and_cache_pdf(filepath):
         hasher.update(buf)
     pdf_hash = hasher.hexdigest()
 
-    
-    base_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash)
+    base_dir = os.path.join("processed_pdfs", pdf_hash)
 
     # If cache exists and looks populated (has chapters.json), just load it
     chapters_json_path = os.path.join(base_dir, "chapters.json")
@@ -771,7 +726,7 @@ def extract_and_cache_pdf(filepath):
     return chapters
 
 
-def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_output=None):
+def process_aulas_from_pdf(filepath, output_json="aulas_report.json"):
     """
     Main orchestration function for Aula processing.
     Uses cached structure or extracts texts, parses chapters/aulas and their sections,
@@ -780,25 +735,15 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
     import json
     import hashlib
 
+    # 1. Get parsed Chapters and Aulas (either extracted fresh or from cache)
+    chapters = extract_and_cache_pdf(filepath)
+
     # Calculate hash to find the root cache directory
     hasher = hashlib.md5()
     with open(filepath, 'rb') as f:
         buf = f.read()
         hasher.update(buf)
     pdf_hash = hasher.hexdigest()
-
-    # Early write of the hash output to ensure the frontend receives it
-    # even if processing fails later (e.g. empty PDF)
-    if hash_output:
-        import sys
-        try:
-            with open(hash_output, 'w', encoding='utf-8') as f:
-                f.write(pdf_hash)
-        except Exception as e:
-            print(f"Failed to write hash output: {e}", file=sys.stderr)
-
-    # 1. Get parsed Chapters and Aulas (either extracted fresh or from cache)
-    chapters = extract_and_cache_pdf(filepath)
 
     # 2. Collect all extracted text to detect language
     # We flatten all sections from all aulas from all chapters to pass to language detection
@@ -829,7 +774,7 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
             total_aulas += 1
 
             # Save separate JSONs for the NLP processes inside the chapter/aula directory
-            aula_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash, f"Chapter_{chapter['number']}", f"Aula_{aula['number']}")
+            aula_dir = os.path.join("processed_pdfs", pdf_hash, f"Chapter_{chapter['number']}", f"Aula_{aula['number']}")
             os.makedirs(aula_dir, exist_ok=True)
 
             topic_order = {
@@ -881,9 +826,7 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
         json.dump(response_data, f, indent=4, ensure_ascii=False)
 
     # Note: JSON structure dumped to stdout for integration with Tauri frontend
-    import sys
-    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}), flush=True)
-    sys.stdout.flush()
+    print(json.dumps({"pdf_hash": pdf_hash, "output_json": output_json, "status": "success"}))
     return response_data
 
 if __name__ == "__main__":
@@ -892,12 +835,11 @@ if __name__ == "__main__":
     parser.add_argument("mode", type=str, choices=["aulas", "pdf", "compare"], help="Processing mode")
     parser.add_argument("file", type=str, help="Primary PDF file to process")
     parser.add_argument("--file2", type=str, help="Secondary PDF file (student) for comparison", default=None)
-    parser.add_argument("--hash-output", type=str, help="File to write the resulting pdf_hash to", default=None)
 
     args = parser.parse_args()
 
     if args.mode == "aulas":
-        process_aulas_from_pdf(args.file, hash_output=args.hash_output)
+        process_aulas_from_pdf(args.file)
     elif args.mode == "pdf":
         process_pdf_and_export_json(args.file)
     elif args.mode == "compare":
