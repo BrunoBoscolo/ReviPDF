@@ -286,7 +286,7 @@
             let html = '<div class="grid grid-cols-2 gap-8">';
 
             // Teacher Column
-            html += '<div class="space-y-4">';
+            html += '<div class="space-y-4 min-w-0 break-words">';
             html += '<h3 class="text-xl font-bold border-b pb-2">Teacher Material</h3>';
             if (teacherText && teacherText.length > 0) {
                 teacherText.forEach(p => {
@@ -301,7 +301,7 @@
             html += '</div>';
 
             // Student Column
-            html += '<div class="space-y-4">';
+            html += '<div class="space-y-4 min-w-0 break-words">';
             html += '<h3 class="text-xl font-bold border-b pb-2">Student Material</h3>';
             if (studentText && studentText.length > 0) {
                 studentText.forEach(p => {
@@ -325,7 +325,7 @@
             }
 
             if (allRedundancies.length > 0) {
-                html += '<div class="mt-12">';
+                html += '<div class="mt-12 min-w-0 break-words">';
                 html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-red-600">Detected Redundancies</h3>';
                 allRedundancies.forEach(pair => {
                     html += `
@@ -333,9 +333,9 @@
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-xs font-bold bg-red-200 text-red-800 px-2 py-1 rounded">Similarity: ${(pair.score * 100).toFixed(1)}%</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm mt-3">
-                                <div><strong class="text-red-800">P1 (${pair.para1.id}):</strong> ${pair.para1.text}</div>
-                                <div><strong class="text-red-800">P2 (${pair.para2.id}):</strong> ${pair.para2.text}</div>
+                            <div class="grid grid-cols-2 gap-4 text-sm mt-3 min-w-0">
+                                <div class="break-words"><strong class="text-red-800">P1 (${pair.para1.id}):</strong> ${pair.para1.text}</div>
+                                <div class="break-words"><strong class="text-red-800">P2 (${pair.para2.id}):</strong> ${pair.para2.text}</div>
                             </div>
                         </div>
                     `;
@@ -345,7 +345,7 @@
 
             // NER Consistency section below
             if (ner && ner.guia_vs_conteudo) {
-                html += '<div class="mt-12">';
+                html += '<div class="mt-12 min-w-0 break-words">';
                 html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-blue-600">NER Consistency (Teacher vs Student)</h3>';
                 for (const category of ["PERSON", "LOCATION", "DATE"]) {
                     const catData = ner.guia_vs_conteudo[category];
@@ -353,16 +353,16 @@
                         html += `
                             <div class="p-4 mb-4 border border-blue-200 bg-blue-50 rounded-lg">
                                 <h4 class="font-bold text-blue-800 mb-2">${category}</h4>
-                                <div class="grid grid-cols-3 gap-4 text-sm">
-                                    <div>
+                                <div class="grid grid-cols-3 gap-4 text-sm min-w-0">
+                                    <div class="break-words">
                                         <strong class="text-green-700 block mb-1">In Both:</strong>
                                         <ul class="list-disc pl-4">${(catData.in_both || []).map(e => `<li>${e}</li>`).join('') || '<span class="text-slate-500 italic">None</span>'}</ul>
                                     </div>
-                                    <div>
+                                    <div class="break-words">
                                         <strong class="text-red-700 block mb-1">Missing in Student:</strong>
                                         <ul class="list-disc pl-4">${(catData.missing_in_student || []).map(e => `<li>${e}</li>`).join('') || '<span class="text-slate-500 italic">None</span>'}</ul>
                                     </div>
-                                    <div>
+                                    <div class="break-words">
                                         <strong class="text-orange-700 block mb-1">Missing in Teacher:</strong>
                                         <ul class="list-disc pl-4">${(catData.missing_in_teacher || []).map(e => `<li>${e}</li>`).join('') || '<span class="text-slate-500 italic">None</span>'}</ul>
                                     </div>
@@ -376,9 +376,9 @@
 
             // Vocabulary and Unusual Words section below
             if (vocab) {
-                html += '<div class="mt-12">';
+                html += '<div class="mt-12 min-w-0 break-words">';
                 html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-purple-600">Vocabulary & Unusual Words</h3>';
-                html += '<div class="grid grid-cols-2 gap-8">';
+                html += '<div class="grid grid-cols-2 gap-8 min-w-0">';
 
                 const sections = [
                     { key: 'guia_do_professor', title: 'Teacher Material' },
@@ -387,7 +387,7 @@
 
                 sections.forEach(sec => {
                     const v = vocab[sec.key];
-                    html += '<div class="space-y-4">';
+                    html += '<div class="space-y-4 min-w-0">';
                     html += `<h4 class="text-lg font-bold text-slate-700">${sec.title}</h4>`;
                     if (v) {
                         html += `
@@ -404,20 +404,27 @@
                         `;
 
                         if (v.rare_words_and_jargon && Object.keys(v.rare_words_and_jargon).length > 0) {
-                            html += `
-                                <div class="bg-slate-50 p-4 rounded border border-slate-200">
-                                    <strong class="block text-slate-800 mb-2">Unusual Words & Jargon</strong>
-                                    <div class="flex flex-wrap gap-2">
-                            `;
-                            // Sort rare words by zipf frequency ascending (rarest first)
-                            const rareWords = Object.entries(v.rare_words_and_jargon).sort((a, b) => a[1] - b[1]);
-                            rareWords.forEach(([word, zipf]) => {
-                                html += `<span class="px-2 py-1 bg-white border border-slate-300 rounded text-xs">${word}</span>`;
-                            });
-                            html += `
+                            // Filter rare words to be more restrictive (Zipf < 3.0) for older processed documents
+                            const rareWords = Object.entries(v.rare_words_and_jargon)
+                                .filter(([, zipf]) => zipf < 3.0)
+                                .sort((a, b) => a[1] - b[1]); // Sort by rarest first
+
+                            if (rareWords.length > 0) {
+                                html += `
+                                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                                        <strong class="block text-slate-800 mb-2">Unusual Words & Jargon</strong>
+                                        <div class="flex flex-wrap gap-2">
+                                `;
+                                rareWords.forEach(([word, zipf]) => {
+                                    html += `<span class="px-2 py-1 bg-white border border-slate-300 rounded text-xs inline-block max-w-full break-all">${word}</span>`;
+                                });
+                                html += `
+                                        </div>
                                     </div>
-                                </div>
-                            `;
+                                `;
+                            } else {
+                                html += '<p class="text-slate-500 italic text-sm">No unusually rare words found.</p>';
+                            }
                         } else {
                             html += '<p class="text-slate-500 italic text-sm">No unusual words found.</p>';
                         }

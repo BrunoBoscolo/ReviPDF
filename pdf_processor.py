@@ -304,7 +304,7 @@ def evaluate_vocabulary(data, nlp):
     for word in set(words):
         zipf = wordfreq.zipf_frequency(word, lang)
         # Include words with 0.0 frequency as they are the rarest (out of vocabulary)
-        if zipf < 3.5:
+        if zipf < 3.0:
             rare_words[word] = zipf
 
         # Only use valid words (>0) for average zipf to avoid skewing readability too much with OCR errors
