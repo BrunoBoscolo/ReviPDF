@@ -116,13 +116,23 @@
                 const chapNum = String(idx + 1).padStart(2, '0');
                 const chapterKey = `Chapter_${chapNum}`;
 
+                // Try to extract theme from chapter_info if present (e.g., "Chapter 01 - Theme Name")
+                let theme = chapObj.theme;
+                if (!theme && chapObj.chapter_info) {
+                    const match = chapObj.chapter_info.match(/Chapter \d+ - (.*)/i);
+                    if (match && match[1]) {
+                        theme = match[1];
+                    }
+                }
+                const chapterLabel = `Chapter ${chapNum}${theme ? ` - ${theme}` : ''}`;
+
                 const aulasList = [];
                 if (chapObj.aulas) {
                     chapObj.aulas.forEach((_, aidx) => {
                         aulasList.push(`Aula_${String(aidx + 1).padStart(2, '0')}`);
                     });
                 }
-                chapterData[chapterKey] = { aulas: aulasList };
+                chapterData[chapterKey] = { label: chapterLabel, aulas: aulasList };
             });
         }
 
@@ -130,7 +140,7 @@
         Object.keys(chapterData).forEach(chapterKey => {
             const opt = document.createElement('option');
             opt.value = chapterKey;
-            opt.textContent = chapterKey.replace('_', ' ');
+            opt.textContent = chapterData[chapterKey].label;
             chapterSelect.appendChild(opt);
         });
     } catch (e) {
