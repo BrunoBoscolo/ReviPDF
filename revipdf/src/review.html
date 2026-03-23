@@ -454,8 +454,12 @@
             // 4. Detected Redundancies
             let allRedundancies = [];
             if (redundancies) {
-                if (redundancies.guia_do_professor) allRedundancies.push(...redundancies.guia_do_professor);
-                if (redundancies.conteudo_do_aluno) allRedundancies.push(...redundancies.conteudo_do_aluno);
+                if (redundancies.guia_do_professor) {
+                    allRedundancies.push(...redundancies.guia_do_professor.map(r => ({...r, sourceName: "Teacher Material", sourceColor: "text-tertiary", sourceBg: "bg-tertiary/10"})));
+                }
+                if (redundancies.conteudo_do_aluno) {
+                    allRedundancies.push(...redundancies.conteudo_do_aluno.map(r => ({...r, sourceName: "Student Material", sourceColor: "text-secondary", sourceBg: "bg-secondary/10"})));
+                }
             }
 
             if(allRedundancies.length > 0) {
@@ -499,6 +503,11 @@
                                     </div>
                                 </div>
                             </div>
+                            ${pair.sourceName ? `
+                            <div class="shrink-0">
+                                <span class="px-2 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md ${pair.sourceBg} ${pair.sourceColor}">${pair.sourceName}</span>
+                            </div>
+                            ` : ''}
                         </div>
                     `;
                 });
