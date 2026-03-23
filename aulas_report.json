@@ -163,9 +163,8 @@
                                     "ingenhousz": 1
                                 },
                                 "rare_words_and_jargon": {
-                                    "photosynthesis": 3.03,
-                                    "ingenhousz": 0.0,
-                                    "ener": 1.84
+                                    "ener": 1.84,
+                                    "ingenhousz": 0.0
                                 },
                                 "lexical_richness_ttr": 0.9286,
                                 "readability_avg_zipf": 4.2292
@@ -194,7 +193,6 @@
                                     "ingenhousz": 1
                                 },
                                 "rare_words_and_jargon": {
-                                    "photosynthesis": 3.03,
                                     "ingenhousz": 0.0
                                 },
                                 "lexical_richness_ttr": 1.0,
@@ -215,9 +213,7 @@
                                     "explain": 1,
                                     "process": 1
                                 },
-                                "rare_words_and_jargon": {
-                                    "photosynthesis": 3.03
-                                },
+                                "rare_words_and_jargon": {},
                                 "lexical_richness_ttr": 0.8,
                                 "readability_avg_zipf": 4.48
                             }
