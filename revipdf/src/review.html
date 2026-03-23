@@ -495,11 +495,17 @@
                                 <div class="flex flex-col gap-1 overflow-visible">
                                     <div class="flex items-start gap-2">
                                         <span class="w-1 h-1 ${dotColorClass} rounded-full shrink-0 mt-2"></span>
-                                        <p class="text-sm italic text-slate-500 break-words whitespace-normal">"${pair.para1.text}"</p>
+                                        <p class="text-sm italic text-slate-500 break-words whitespace-normal">
+                                            "${pair.para1.text}"
+                                            ${(pair.para1.page || pair.para1.id) ? `<span class="text-[10px] text-slate-400 not-italic ml-2 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">${[pair.para1.page ? `Pg ${pair.para1.page}` : '', pair.para1.id ? `ID ${pair.para1.id}` : ''].filter(Boolean).join(' • ')}</span>` : ''}
+                                        </p>
                                     </div>
                                     <div class="flex items-start gap-2">
                                         <span class="w-1 h-1 ${dotColorClass} rounded-full shrink-0 mt-2"></span>
-                                        <p class="text-sm italic text-slate-500 break-words whitespace-normal">"${pair.para2.text}"</p>
+                                        <p class="text-sm italic text-slate-500 break-words whitespace-normal">
+                                            "${pair.para2.text}"
+                                            ${(pair.para2.page || pair.para2.id) ? `<span class="text-[10px] text-slate-400 not-italic ml-2 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">${[pair.para2.page ? `Pg ${pair.para2.page}` : '', pair.para2.id ? `ID ${pair.para2.id}` : ''].filter(Boolean).join(' • ')}</span>` : ''}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
