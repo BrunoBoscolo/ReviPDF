@@ -317,75 +317,145 @@
             // Build Content View using Bento Grid Design
             let html = `
                 <!-- 2. Metrics Overview (Bento Grid) -->
-                <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+
+                <!-- Teacher Material Grid -->
+                <div class="flex items-center gap-2 mb-4 mt-8 pb-2 border-b border-indigo-500/10">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Teacher Material Metrics</span>
+                </div>
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
             `;
 
-            // Redundancies Card
-            let totalRedundancyText = "";
-            let wordCount = 0;
-            if(teacherText) teacherText.forEach(t => wordCount += t.text.split(' ').length);
-            if(studentText) studentText.forEach(t => wordCount += t.text.split(' ').length);
-
-            let redundancyPercent = (redCount * 15 / (wordCount > 0 ? wordCount : 1) * 100).toFixed(1); // very rough estimate
+            // Teacher Redundancies Card
+            let teacherRedCount = redundancies && redundancies.guia_do_professor ? redundancies.guia_do_professor.length : 0;
 
             html += `
-                    <!-- Redundancy Card -->
                     <div class="bg-surface p-6 rounded-xl editorial-shadow border-b-4 border-error/20">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Redundancies</span>
                             <span class="material-symbols-outlined text-error bg-error-container p-2 rounded-lg text-lg">unfold_less</span>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-bold">${redCount}</span>
+                            <span class="text-3xl font-bold">${teacherRedCount}</span>
                         </div>
-                        <p class="text-on-surface-variant text-sm mt-2">Found across this aula.</p>
+                        <p class="text-on-surface-variant text-sm mt-2">Found in Teacher Material.</p>
                     </div>
             `;
 
-            // Readability Card
-            let readabilityDisplay = 'N/A';
-            let readabilityDetail = 'N/A';
+            // Teacher Readability Card
+            let tReadabilityDisplay = 'N/A';
+            let tReadabilityDetail = 'N/A';
             if (vocab && vocab.guia_do_professor && vocab.guia_do_professor.readability_avg_zipf !== undefined) {
-                readabilityDisplay = getReadabilityLabel(vocab.guia_do_professor.readability_avg_zipf).split(' ')[0];
-                readabilityDetail = (vocab.guia_do_professor.readability_avg_zipf).toFixed(2) + " Zipf";
+                tReadabilityDisplay = getReadabilityLabel(vocab.guia_do_professor.readability_avg_zipf).split(' ')[0];
+                tReadabilityDetail = (vocab.guia_do_professor.readability_avg_zipf).toFixed(2) + " Zipf";
             }
 
             html += `
-                    <!-- Readability Card -->
                     <div class="bg-surface p-6 rounded-xl editorial-shadow border-b-4 border-tertiary/20">
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Teacher Readability</span>
+                            <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Readability</span>
                             <span class="material-symbols-outlined text-tertiary bg-tertiary-container/30 p-2 rounded-lg text-lg">menu_book</span>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-bold">${readabilityDisplay}</span>
-                            <span class="text-slate-400 font-bold text-sm">${readabilityDetail}</span>
+                            <span class="text-3xl font-bold">${tReadabilityDisplay}</span>
+                            <span class="text-slate-400 font-bold text-sm">${tReadabilityDetail}</span>
                         </div>
                         <p class="text-on-surface-variant text-sm mt-2">Average sentence complexity.</p>
                     </div>
             `;
 
-            // Lexical Richness Card
-            let richnessDisplay = 'N/A';
-            let richnessDetail = 'N/A';
+            // Teacher Lexical Richness Card
+            let tRichnessDisplay = 'N/A';
+            let tRichnessDetail = 'N/A';
             if (vocab && vocab.guia_do_professor && vocab.guia_do_professor.lexical_richness_ttr !== undefined) {
-                richnessDisplay = getLexicalRichnessLabel(vocab.guia_do_professor.lexical_richness_ttr).split(' ')[0];
-                if(richnessDisplay === 'Standard' || richnessDisplay === 'Rich' || richnessDisplay === 'Very') {
-                   richnessDisplay = getLexicalRichnessLabel(vocab.guia_do_professor.lexical_richness_ttr).split(' ').slice(0, 2).join(' ');
+                tRichnessDisplay = getLexicalRichnessLabel(vocab.guia_do_professor.lexical_richness_ttr).split(' ')[0];
+                if(tRichnessDisplay === 'Standard' || tRichnessDisplay === 'Rich' || tRichnessDisplay === 'Very') {
+                   tRichnessDisplay = getLexicalRichnessLabel(vocab.guia_do_professor.lexical_richness_ttr).split(' ').slice(0, 2).join(' ');
                 }
-                richnessDetail = (vocab.guia_do_professor.lexical_richness_ttr * 100).toFixed(0) + "% TTR";
+                tRichnessDetail = (vocab.guia_do_professor.lexical_richness_ttr * 100).toFixed(0) + "% TTR";
             }
 
             html += `
-                    <!-- Lexical Richness Card -->
                     <div class="bg-surface p-6 rounded-xl editorial-shadow border-b-4 border-primary/20">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Lexical Richness</span>
                             <span class="material-symbols-outlined text-primary bg-primary-container p-2 rounded-lg text-lg">auto_awesome</span>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-bold">${richnessDisplay}</span>
-                            <span class="text-primary font-bold text-sm">${richnessDetail}</span>
+                            <span class="text-3xl font-bold">${tRichnessDisplay}</span>
+                            <span class="text-primary font-bold text-sm">${tRichnessDetail}</span>
+                        </div>
+                        <p class="text-on-surface-variant text-sm mt-2">Variety in vocabulary usage.</p>
+                    </div>
+                </section>
+
+                <!-- Student Material Grid -->
+                <div class="flex items-center gap-2 mb-4 mt-8 pb-2 border-b border-indigo-500/10">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Student Material Metrics</span>
+                </div>
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            `;
+
+            // Student Redundancies Card
+            let studentRedCount = redundancies && redundancies.conteudo_do_aluno ? redundancies.conteudo_do_aluno.length : 0;
+
+            html += `
+                    <div class="bg-surface p-6 rounded-xl editorial-shadow border-b-4 border-error/20">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Redundancies</span>
+                            <span class="material-symbols-outlined text-error bg-error-container p-2 rounded-lg text-lg">unfold_less</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-bold">${studentRedCount}</span>
+                        </div>
+                        <p class="text-on-surface-variant text-sm mt-2">Found in Student Material.</p>
+                    </div>
+            `;
+
+            // Student Readability Card
+            let sReadabilityDisplay = 'N/A';
+            let sReadabilityDetail = 'N/A';
+            // The JSON key often uses "conteudo_do_livro_do_aluno" or "conteudo_do_aluno" depending on the pipeline
+            let studentVocabKey = (vocab && vocab.conteudo_do_livro_do_aluno) ? vocab.conteudo_do_livro_do_aluno : ((vocab && vocab.conteudo_do_aluno) ? vocab.conteudo_do_aluno : null);
+
+            if (studentVocabKey && studentVocabKey.readability_avg_zipf !== undefined) {
+                sReadabilityDisplay = getReadabilityLabel(studentVocabKey.readability_avg_zipf).split(' ')[0];
+                sReadabilityDetail = (studentVocabKey.readability_avg_zipf).toFixed(2) + " Zipf";
+            }
+
+            html += `
+                    <div class="bg-surface p-6 rounded-xl editorial-shadow border-b-4 border-tertiary/20">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Readability</span>
+                            <span class="material-symbols-outlined text-secondary bg-secondary-container/30 p-2 rounded-lg text-lg">menu_book</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-bold">${sReadabilityDisplay}</span>
+                            <span class="text-slate-400 font-bold text-sm">${sReadabilityDetail}</span>
+                        </div>
+                        <p class="text-on-surface-variant text-sm mt-2">Average sentence complexity.</p>
+                    </div>
+            `;
+
+            // Student Lexical Richness Card
+            let sRichnessDisplay = 'N/A';
+            let sRichnessDetail = 'N/A';
+            if (studentVocabKey && studentVocabKey.lexical_richness_ttr !== undefined) {
+                sRichnessDisplay = getLexicalRichnessLabel(studentVocabKey.lexical_richness_ttr).split(' ')[0];
+                if(sRichnessDisplay === 'Standard' || sRichnessDisplay === 'Rich' || sRichnessDisplay === 'Very') {
+                   sRichnessDisplay = getLexicalRichnessLabel(studentVocabKey.lexical_richness_ttr).split(' ').slice(0, 2).join(' ');
+                }
+                sRichnessDetail = (studentVocabKey.lexical_richness_ttr * 100).toFixed(0) + "% TTR";
+            }
+
+            html += `
+                    <div class="bg-surface p-6 rounded-xl editorial-shadow border-b-4 border-primary/20">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[0.75rem] font-bold text-slate-500 uppercase">Lexical Richness</span>
+                            <span class="material-symbols-outlined text-secondary bg-secondary-container p-2 rounded-lg text-lg">auto_awesome</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-bold">${sRichnessDisplay}</span>
+                            <span class="text-secondary font-bold text-sm">${sRichnessDetail}</span>
                         </div>
                         <p class="text-on-surface-variant text-sm mt-2">Variety in vocabulary usage.</p>
                     </div>
