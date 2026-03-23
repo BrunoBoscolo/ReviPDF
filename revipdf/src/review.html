@@ -216,20 +216,65 @@
                 if (redundancies.conteudo_do_aluno) redCount += redundancies.conteudo_do_aluno.length;
             }
 
+            // Helper functions for human-readable metrics
+            const getReadabilityLabel = (zipf) => {
+                if (zipf === undefined || zipf === null) return 'N/A';
+                if (zipf < 3.0) return 'Very Difficult (Academic/Jargon)';
+                if (zipf < 4.0) return 'Difficult (Advanced)';
+                if (zipf < 5.0) return 'Moderate (Standard)';
+                if (zipf < 6.0) return 'Easy (Common)';
+                return 'Very Easy (Basic)';
+            };
+
+            const getLexicalRichnessLabel = (ttr) => {
+                if (ttr === undefined || ttr === null) return 'N/A';
+                if (ttr < 0.3) return 'Very Repetitive';
+                if (ttr < 0.5) return 'Standard (Repetitive)';
+                if (ttr < 0.7) return 'Rich Vocabulary';
+                return 'Very Rich Vocabulary';
+            };
+
             let nerConsistency = 'N/A';
-            if (ner && ner.guia_vs_conteudo && typeof ner.guia_vs_conteudo.consistency_score !== 'undefined') {
-                nerConsistency = (ner.guia_vs_conteudo.consistency_score * 100).toFixed(1) + '%';
+            let inBothCount = 0;
+            let missingInStudentCount = 0;
+            let missingInTeacherCount = 0;
+
+            if (ner && ner.guia_vs_conteudo) {
+                // If consistency_score was added later, use it, otherwise calculate it
+                if (typeof ner.guia_vs_conteudo.consistency_score !== 'undefined') {
+                    nerConsistency = (ner.guia_vs_conteudo.consistency_score * 100).toFixed(1) + '%';
+                } else {
+                    for (const category of ["PERSON", "LOCATION", "DATE"]) {
+                        const catData = ner.guia_vs_conteudo[category];
+                        if (catData) {
+                            inBothCount += (catData.in_both || []).length;
+                            missingInStudentCount += (catData.missing_in_student || []).length;
+                            missingInTeacherCount += (catData.missing_in_teacher || []).length;
+                        }
+                    }
+                    const totalUniqueEntities = inBothCount + missingInStudentCount + missingInTeacherCount;
+                    if (totalUniqueEntities > 0) {
+                        nerConsistency = ((inBothCount / totalUniqueEntities) * 100).toFixed(1) + '%';
+                    } else {
+                        nerConsistency = '100.0%'; // No entities found
+                    }
+                }
             }
 
             // Build Metrics View
+            let readabilityDisplay = 'N/A';
+            if (vocab && vocab.guia_do_professor && vocab.guia_do_professor.readability_avg_zipf !== undefined) {
+                readabilityDisplay = getReadabilityLabel(vocab.guia_do_professor.readability_avg_zipf);
+            }
+
             metricsOverview.innerHTML = `
                 <div class="bg-primary/5 p-4 rounded-lg">
                     <span class="text-xs font-bold text-primary block mb-1">Redundancies</span>
                     <span class="text-lg font-bold">${redCount}</span> pairs found
                 </div>
                 <div class="bg-primary/5 p-4 rounded-lg">
-                    <span class="text-xs font-bold text-primary block mb-1">Teacher Zipf Avg</span>
-                    <span class="text-lg font-bold">${vocab ? (vocab.guia_do_professor?.readability_avg_zipf?.toFixed(2) || 'N/A') : 'N/A'}</span>
+                    <span class="text-xs font-bold text-primary block mb-1">Teacher Readability</span>
+                    <span class="text-lg font-bold">${readabilityDisplay}</span>
                 </div>
                 <div class="bg-primary/5 p-4 rounded-lg">
                     <span class="text-xs font-bold text-primary block mb-1">NER Consistency</span>
@@ -241,7 +286,7 @@
             let html = '<div class="grid grid-cols-2 gap-8">';
 
             // Teacher Column
-            html += '<div class="space-y-4">';
+            html += '<div class="space-y-4 min-w-0 break-words">';
             html += '<h3 class="text-xl font-bold border-b pb-2">Teacher Material</h3>';
             if (teacherText && teacherText.length > 0) {
                 teacherText.forEach(p => {
@@ -256,7 +301,7 @@
             html += '</div>';
 
             // Student Column
-            html += '<div class="space-y-4">';
+            html += '<div class="space-y-4 min-w-0 break-words">';
             html += '<h3 class="text-xl font-bold border-b pb-2">Student Material</h3>';
             if (studentText && studentText.length > 0) {
                 studentText.forEach(p => {
@@ -280,7 +325,7 @@
             }
 
             if (allRedundancies.length > 0) {
-                html += '<div class="mt-12">';
+                html += '<div class="mt-12 min-w-0 break-words">';
                 html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-red-600">Detected Redundancies</h3>';
                 allRedundancies.forEach(pair => {
                     html += `
@@ -288,14 +333,109 @@
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-xs font-bold bg-red-200 text-red-800 px-2 py-1 rounded">Similarity: ${(pair.score * 100).toFixed(1)}%</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm mt-3">
-                                <div><strong class="text-red-800">P1 (${pair.para1.id}):</strong> ${pair.para1.text}</div>
-                                <div><strong class="text-red-800">P2 (${pair.para2.id}):</strong> ${pair.para2.text}</div>
+                            <div class="grid grid-cols-2 gap-4 text-sm mt-3 min-w-0">
+                                <div class="break-words"><strong class="text-red-800">P1 (${pair.para1.id}):</strong> ${pair.para1.text}</div>
+                                <div class="break-words"><strong class="text-red-800">P2 (${pair.para2.id}):</strong> ${pair.para2.text}</div>
                             </div>
                         </div>
                     `;
                 });
                 html += '</div>';
+            }
+
+            // NER Consistency section below
+            if (ner && ner.guia_vs_conteudo) {
+                html += '<div class="mt-12 min-w-0 break-words">';
+                html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-blue-600">NER Consistency (Teacher vs Student)</h3>';
+                for (const category of ["PERSON", "LOCATION", "DATE"]) {
+                    const catData = ner.guia_vs_conteudo[category];
+                    if (catData && (catData.in_both?.length > 0 || catData.missing_in_student?.length > 0 || catData.missing_in_teacher?.length > 0)) {
+                        html += `
+                            <div class="p-4 mb-4 border border-blue-200 bg-blue-50 rounded-lg">
+                                <h4 class="font-bold text-blue-800 mb-2">${category}</h4>
+                                <div class="grid grid-cols-3 gap-4 text-sm min-w-0">
+                                    <div class="break-words">
+                                        <strong class="text-green-700 block mb-1">In Both:</strong>
+                                        <ul class="list-disc pl-4">${(catData.in_both || []).map(e => `<li>${e}</li>`).join('') || '<span class="text-slate-500 italic">None</span>'}</ul>
+                                    </div>
+                                    <div class="break-words">
+                                        <strong class="text-red-700 block mb-1">Missing in Student:</strong>
+                                        <ul class="list-disc pl-4">${(catData.missing_in_student || []).map(e => `<li>${e}</li>`).join('') || '<span class="text-slate-500 italic">None</span>'}</ul>
+                                    </div>
+                                    <div class="break-words">
+                                        <strong class="text-orange-700 block mb-1">Missing in Teacher:</strong>
+                                        <ul class="list-disc pl-4">${(catData.missing_in_teacher || []).map(e => `<li>${e}</li>`).join('') || '<span class="text-slate-500 italic">None</span>'}</ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                html += '</div>';
+            }
+
+            // Vocabulary and Unusual Words section below
+            if (vocab) {
+                html += '<div class="mt-12 min-w-0 break-words">';
+                html += '<h3 class="text-xl font-bold border-b pb-2 mb-4 text-purple-600">Vocabulary & Unusual Words</h3>';
+                html += '<div class="grid grid-cols-2 gap-8 min-w-0">';
+
+                const sections = [
+                    { key: 'guia_do_professor', title: 'Teacher Material' },
+                    { key: 'conteudo_do_aluno', title: 'Student Material' }
+                ];
+
+                sections.forEach(sec => {
+                    const v = vocab[sec.key];
+                    html += '<div class="space-y-4 min-w-0">';
+                    html += `<h4 class="text-lg font-bold text-slate-700">${sec.title}</h4>`;
+                    if (v) {
+                        html += `
+                            <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                                <div class="bg-purple-50 p-3 rounded border border-purple-100">
+                                    <span class="block text-purple-800 font-bold mb-1">Readability</span>
+                                    ${getReadabilityLabel(v.readability_avg_zipf)}
+                                </div>
+                                <div class="bg-purple-50 p-3 rounded border border-purple-100">
+                                    <span class="block text-purple-800 font-bold mb-1">Lexical Richness</span>
+                                    ${getLexicalRichnessLabel(v.lexical_richness_ttr)}
+                                </div>
+                            </div>
+                        `;
+
+                        if (v.rare_words_and_jargon && Object.keys(v.rare_words_and_jargon).length > 0) {
+                            // Filter rare words to be more restrictive (Zipf < 3.0) for older processed documents
+                            const rareWords = Object.entries(v.rare_words_and_jargon)
+                                .filter(([, zipf]) => zipf < 3.0)
+                                .sort((a, b) => a[1] - b[1]); // Sort by rarest first
+
+                            if (rareWords.length > 0) {
+                                html += `
+                                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                                        <strong class="block text-slate-800 mb-2">Unusual Words & Jargon</strong>
+                                        <div class="flex flex-wrap gap-2">
+                                `;
+                                rareWords.forEach(([word, zipf]) => {
+                                    html += `<span class="px-2 py-1 bg-white border border-slate-300 rounded text-xs inline-block max-w-full break-all">${word}</span>`;
+                                });
+                                html += `
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                html += '<p class="text-slate-500 italic text-sm">No unusually rare words found.</p>';
+                            }
+                        } else {
+                            html += '<p class="text-slate-500 italic text-sm">No unusual words found.</p>';
+                        }
+                    } else {
+                         html += '<p class="text-slate-500 italic text-sm">No vocabulary data available.</p>';
+                    }
+                    html += '</div>';
+                });
+
+                html += '</div>'; // End grid grid-cols-2
+                html += '</div>'; // End Vocabulary section
             }
 
             viewerContent.innerHTML = html;
