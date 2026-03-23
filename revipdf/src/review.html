@@ -18,8 +18,8 @@
 <!-- SideNavBar (Shared Component) -->
 <aside class="fixed left-0 top-0 h-full w-64 flex flex-col p-4 z-40 bg-slate-50 dark:bg-slate-900 border-r border-indigo-500/10 dark:border-indigo-400/10 font-medium Inter text-sm">
 <div class="mb-10 px-4">
-<h1 class="text-xl font-black text-indigo-700 dark:text-indigo-400 tracking-tight">Manuscript</h1>
-<p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Editorial Architect</p>
+<h1 class="text-xl font-black text-indigo-700 dark:text-indigo-400 tracking-tight">ReviPDF</h1>
+<p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Hello Alexia!</p>
 </div>
 <nav class="flex-1 space-y-1">
 <a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg hover:translate-x-1 transition-transform duration-200" href="#">
@@ -47,7 +47,6 @@
 <!-- TopNavBar (Shared Component) -->
 <header class="sticky top-0 z-50 flex items-center justify-between px-8 py-4 w-full bg-white/90 backdrop-blur-md border-b border-indigo-500/10 shadow-xl font-inter antialiased tracking-tight">
 <div class="flex items-center gap-8">
-<span class="text-lg font-bold text-indigo-700 tracking-tighter">Violet Alidade</span>
 <nav class="hidden md:flex gap-6 items-center">
 <a class="text-slate-400 hover:text-indigo-600 transition-colors" href="#">Dashboard</a>
 <a class="text-indigo-700 border-b-2 border-indigo-700 pb-1 font-bold" href="#">Revision</a>
@@ -489,14 +488,14 @@
                                     <span class="text-lg font-black">${matchPercent}%</span>
                                     <span class="text-[8px] font-bold uppercase">Match</span>
                                 </div>
-                                <div class="flex flex-col gap-1 overflow-hidden">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-1 h-1 ${dotColorClass} rounded-full shrink-0"></span>
-                                        <p class="text-sm italic text-slate-500 truncate" title="${pair.para1.text}">"${pair.para1.text}"</p>
+                                <div class="flex flex-col gap-1 overflow-visible">
+                                    <div class="flex items-start gap-2">
+                                        <span class="w-1 h-1 ${dotColorClass} rounded-full shrink-0 mt-2"></span>
+                                        <p class="text-sm italic text-slate-500 break-words whitespace-normal">"${pair.para1.text}"</p>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-1 h-1 ${dotColorClass} rounded-full shrink-0"></span>
-                                        <p class="text-sm italic text-slate-500 truncate" title="${pair.para2.text}">"${pair.para2.text}"</p>
+                                    <div class="flex items-start gap-2">
+                                        <span class="w-1 h-1 ${dotColorClass} rounded-full shrink-0 mt-2"></span>
+                                        <p class="text-sm italic text-slate-500 break-words whitespace-normal">"${pair.para2.text}"</p>
                                     </div>
                                 </div>
                             </div>
