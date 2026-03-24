@@ -122,8 +122,8 @@
 </div>
 </div>
 <!-- PDF Content -->
-<div class="flex-1 overflow-y-auto p-12 pdf-canvas scrollbar-hide">
-<div id="teacherContent" class="max-w-2xl mx-auto space-y-8 bg-white p-16 shadow-sm min-h-full">
+<div class="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+<div id="teacherContent" class="max-w-2xl mx-auto space-y-4">
 <div class="text-slate-500 text-center py-20">Select a Chapter and Aula.</div>
 </div>
 </div>
@@ -158,8 +158,8 @@
 </div>
 </div>
 <!-- PDF Content -->
-<div class="flex-1 overflow-y-auto p-12 pdf-canvas scrollbar-hide">
-<div id="studentContent" class="max-w-2xl mx-auto space-y-8 bg-white p-16 shadow-sm min-h-full">
+<div class="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+<div id="studentContent" class="max-w-2xl mx-auto space-y-4">
 <div class="text-slate-500 text-center py-20">Select a Chapter and Aula.</div>
 </div>
 </div>
@@ -319,12 +319,14 @@
                 let html = '';
                 data.forEach(block => {
                     html += `
-                        <div class="mb-6 p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100 relative group">
-                            <span class="absolute -top-2.5 -left-2.5 w-6 h-6 flex flex-col items-center justify-center text-[10px] font-bold bg-white text-slate-400 rounded-full border border-slate-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                                ${block.page || '?'}
-                            </span>
+                        <div class="p-5 rounded-xl bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative group">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-[10px] font-bold tracking-widest uppercase text-${colorClass} bg-${colorClass}/10 px-2 py-0.5 rounded">
+                                    Page ${block.page || '?'}
+                                </span>
+                                ${block.id ? `<span class="text-[10px] text-slate-400 font-mono">ID: ${block.id}</span>` : ''}
+                            </div>
                             <p class="text-sm leading-relaxed text-slate-700">${block.text}</p>
-                            ${block.id ? `<span class="text-[10px] text-slate-400 mt-2 block font-mono">ID: ${block.id}</span>` : ''}
                         </div>
                     `;
                 });
