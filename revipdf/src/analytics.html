@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Revision Compare - Violet Alidade</title>
+<link href="output.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+      body { font-family: 'Inter', sans-serif; }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      .pdf-canvas {
+        background-image:
+            linear-gradient(#f1f1f1 1.1px, transparent 1.1px),
+            linear-gradient(90deg, #f1f1f1 1.1px, transparent 1.1px);
+        background-size: 22px 22px;
+      }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary/20">
+
+<!-- TopAppBar Component -->
+<header class="fixed top-0 right-0 left-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-indigo-500/10 h-16 flex items-center justify-between px-8">
+<div class="flex items-center gap-12">
+<div class="text-xl font-black text-indigo-700 tracking-tight">ReviPDF</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-500 font-medium hover:text-indigo-600 cursor-pointer transition-colors text-sm" href="index.html">Dashboard</a>
+<a class="text-slate-500 font-medium hover:text-indigo-600 cursor-pointer transition-colors text-sm" href="review.html">Revision</a>
+<a class="text-indigo-700 border-b-2 border-indigo-700 pb-1 text-sm font-bold" href="#">Analytics</a>
+</nav>
+<div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search revisions..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-500 hover:bg-indigo-50 rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-indigo-50 rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden ml-2">
+<!-- Profile Avatar removed -->
+</div>
+</div>
+</div>
+</header>
+
+<!-- Main Content Canvas -->
+<main class="pt-16 min-h-screen">
+<div class="max-w-[1800px] mx-auto p-8">
+<!-- Header Row -->
+<div class="mb-10">
+<div class="flex justify-between items-end mb-4">
+<div>
+<h1 class="text-[1.875rem] font-bold text-on-surface tracking-tight leading-none mb-2">Revision Compare</h1>
+<p class="text-on-surface-variant font-medium">Analyzing differences between pedagogical guides and student worksheets.</p>
+</div>
+</div>
+<!-- Selectors -->
+<div class="flex items-center gap-8 mt-6">
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.1em]">Chapter</span>
+<div class="relative">
+<select id="chapterSelect" class="bg-white border border-slate-200 rounded-lg text-sm font-bold py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer text-on-surface shadow-sm">
+<option value="">Loading...</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xl">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.1em]">Aula</span>
+<div class="relative">
+<select id="aulaSelect" disabled class="bg-white border border-slate-200 rounded-lg text-sm font-bold py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer text-on-surface shadow-sm">
+<option value="">Select a Chapter first</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xl">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Side-by-Side Comparison Workspace -->
+<div class="grid grid-cols-2 gap-8 items-start h-[calc(100vh-280px)]" style="height: calc(100vh - 280px);">
+<!-- Teacher Column -->
+<div class="flex flex-col h-full">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3">
+<span class="flex h-3 w-3 rounded-full bg-primary"></span>
+<h3 class="text-sm font-bold text-on-surface uppercase tracking-wider">Teacher View</h3>
+</div>
+<div class="relative">
+<select class="bg-surface border border-slate-200 rounded-lg text-xs font-bold py-1.5 pl-3 pr-9 focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm appearance-none">
+<option selected="">Teacher</option>
+<option>Student</option>
+<option>Activity</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-xs">verified</span>
+                        MASTER SOURCE
+                    </div>
+</div>
+<div class="flex-1 bg-surface rounded-xl shadow-2xl overflow-hidden flex flex-col relative border border-slate-200">
+<!-- PDF Top Bar -->
+<div class="bg-surface-container-low px-4 py-2 flex items-center justify-between border-b border-primary/10">
+<span class="text-xs font-bold text-on-surface-variant">Pedagogical_Framework.pdf</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-lg text-slate-400 cursor-pointer">zoom_in</span>
+<span class="text-xs font-bold text-slate-600">100%</span>
+<span class="material-symbols-outlined text-lg text-slate-400 cursor-pointer">zoom_out</span>
+</div>
+</div>
+<!-- PDF Content -->
+<div class="flex-1 overflow-y-auto p-12 pdf-canvas scrollbar-hide">
+<div id="teacherContent" class="max-w-2xl mx-auto space-y-8 bg-white p-16 shadow-sm min-h-full">
+<div class="text-slate-500 text-center py-20">Select a Chapter and Aula.</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Student Column -->
+<div class="flex flex-col h-full">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3">
+<span class="flex h-3 w-3 rounded-full bg-tertiary"></span>
+<h3 class="text-sm font-bold text-on-surface uppercase tracking-wider">Student View</h3>
+</div>
+<div class="relative">
+<select class="bg-surface border border-slate-200 rounded-lg text-xs font-bold py-1.5 pl-3 pr-9 focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm appearance-none">
+<option>Teacher</option>
+<option selected="">Student</option>
+<option>Activity</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
+</div>
+</div>
+</div>
+<div class="flex-1 bg-surface rounded-xl shadow-2xl overflow-hidden flex flex-col relative border border-slate-200">
+<!-- PDF Top Bar -->
+<div class="bg-surface-container-low px-4 py-2 flex items-center justify-between border-b border-primary/10">
+<span class="text-xs font-bold text-on-surface-variant">Worksheet.pdf</span>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-lg text-slate-400 cursor-pointer">zoom_in</span>
+<span class="text-xs font-bold text-slate-600">100%</span>
+<span class="material-symbols-outlined text-lg text-slate-400 cursor-pointer">zoom_out</span>
+</div>
+</div>
+<!-- PDF Content -->
+<div class="flex-1 overflow-y-auto p-12 pdf-canvas scrollbar-hide">
+<div id="studentContent" class="max-w-2xl mx-auto space-y-8 bg-white p-16 shadow-sm min-h-full">
+<div class="text-slate-500 text-center py-20">Select a Chapter and Aula.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Page Navigator -->
+<div class="fixed bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3 bg-white/90 backdrop-blur-xl border border-slate-200 rounded-full shadow-xl z-50">
+<button class="p-2 hover:bg-primary/10 rounded-full transition-all text-slate-600">
+<span class="material-symbols-outlined">first_page</span>
+</button>
+<button class="p-2 hover:bg-primary/10 rounded-full transition-all text-slate-600">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<div class="flex items-center gap-2 px-4 border-x border-slate-200">
+<span class="text-sm font-bold text-primary">04</span>
+<span class="text-xs font-medium text-slate-400">/ 12</span>
+</div>
+<button class="p-2 hover:bg-primary/10 rounded-full transition-all text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="p-2 hover:bg-primary/10 rounded-full transition-all text-slate-600">
+<span class="material-symbols-outlined">last_page</span>
+</button>
+</div>
+</div>
+</main>
+
+<script type="module">
+  console.log("Loading analytics page scripts...");
+  const { readTextFile, BaseDirectory } = window.__TAURI__.fs;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const chapterSelect = document.getElementById('chapterSelect');
+    const aulaSelect = document.getElementById('aulaSelect');
+
+    let pdfHash = null;
+    try {
+        pdfHash = localStorage.getItem('currentPdfHash');
+    } catch (e) {
+        console.warn("Could not read from localStorage, checking URL params", e);
+    }
+
+    if (!pdfHash) {
+        const urlParams = new URLSearchParams(window.location.search);
+        pdfHash = urlParams.get('hash');
+    }
+
+    if (!pdfHash) {
+        alert("No recent processed document found. Please go back and upload a PDF.");
+        return;
+    }
+
+    const basePath = `ReviPDF_Cache/${pdfHash}`;
+    let chapterData = {};
+
+    try {
+        const chaptersJson = await readTextFile(`${basePath}/chapters.json`, { baseDir: BaseDirectory.Temp });
+        const parsedData = JSON.parse(chaptersJson);
+        const chaptersArray = Array.isArray(parsedData) ? parsedData : (parsedData.chapters_analysis || []);
+
+        if (chaptersArray && chaptersArray.length > 0) {
+            chaptersArray.forEach((chapObj, idx) => {
+                const chapNumRaw = chapObj.number || String(idx + 1);
+                const chapNum = String(chapNumRaw).padStart(2, '0');
+                const chapterKey = `Chapter_${chapNum}`;
+
+                let theme = chapObj.theme || "";
+                if (!theme && chapObj.chapter_info) {
+                    const match = chapObj.chapter_info.match(/Chapter \d+ - (.*)/i);
+                    if (match && match[1]) {
+                        theme = match[1].trim();
+                    }
+                }
+                const chapterLabel = `Chapter ${chapNum}${theme ? ` - ${theme}` : ''}`;
+
+                const aulasList = [];
+                if (chapObj.aulas && Array.isArray(chapObj.aulas)) {
+                    chapObj.aulas.forEach((aulaObj, aidx) => {
+                        const aulaNumRaw = aulaObj.number || String(aidx + 1);
+                        const aulaNum = String(aulaNumRaw).padStart(2, '0');
+                        aulasList.push(`Aula_${aulaNum}`);
+                    });
+                }
+                chapterData[chapterKey] = { label: chapterLabel, aulas: aulasList };
+            });
+        }
+
+        chapterSelect.innerHTML = '<option value="">-- Choose Chapter --</option>';
+        Object.keys(chapterData).forEach(chapterKey => {
+            const opt = document.createElement('option');
+            opt.value = chapterKey;
+            opt.textContent = chapterData[chapterKey].label;
+            chapterSelect.appendChild(opt);
+        });
+
+    } catch (e) {
+        console.error("Failed to load document structure.", e);
+        return;
+    }
+
+    // Pass chapterData to window for next steps
+    window.chapterData = chapterData;
+    window.pdfHash = pdfHash;
+
+    chapterSelect.addEventListener('change', () => {
+        const selectedChap = chapterSelect.value;
+        if (!selectedChap) {
+            aulaSelect.disabled = true;
+            aulaSelect.innerHTML = '<option value="">Select a Chapter first</option>';
+            return;
+        }
+
+        aulaSelect.disabled = false;
+        aulaSelect.innerHTML = '<option value="">-- Choose Aula --</option>';
+        const aulas = chapterData[selectedChap].aulas || [];
+        aulas.forEach((aula) => {
+            const opt = document.createElement('option');
+            opt.value = aula;
+            opt.textContent = `Aula ${aula.replace('Aula_', '')}`;
+            aulaSelect.appendChild(opt);
+        });
+    });
+
+    aulaSelect.addEventListener('change', async () => {
+        const selectedChap = chapterSelect.value;
+        const selectedAula = aulaSelect.value;
+        if (!selectedChap || !selectedAula) return;
+
+        const teacherContent = document.getElementById('teacherContent');
+        const studentContent = document.getElementById('studentContent');
+
+        teacherContent.innerHTML = '<div class="text-slate-500 text-center py-20">Loading content...</div>';
+        studentContent.innerHTML = '<div class="text-slate-500 text-center py-20">Loading content...</div>';
+
+        const aulaPath = `${basePath}/${selectedChap}/${selectedAula}`;
+
+        async function readJsonSafe(path) {
+            try {
+                const raw = await readTextFile(path, { baseDir: BaseDirectory.Temp });
+                return JSON.parse(raw);
+            } catch (e) {
+                console.warn(`Failed to read or parse JSON at ${path}:`, e);
+                return null;
+            }
+        }
+
+        try {
+            const teacherText = await readJsonSafe(`${aulaPath}/teacher.json`);
+            const studentText = await readJsonSafe(`${aulaPath}/student.json`);
+
+            const renderTextBlocks = (data, colorClass) => {
+                if (!data || data.length === 0) {
+                    return '<div class="text-slate-500 text-center py-20">No data available for this section.</div>';
+                }
+
+                let html = '';
+                data.forEach(block => {
+                    html += `
+                        <div class="mb-6 p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100 relative group">
+                            <span class="absolute -top-2.5 -left-2.5 w-6 h-6 flex flex-col items-center justify-center text-[10px] font-bold bg-white text-slate-400 rounded-full border border-slate-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                ${block.page || '?'}
+                            </span>
+                            <p class="text-sm leading-relaxed text-slate-700">${block.text}</p>
+                            ${block.id ? `<span class="text-[10px] text-slate-400 mt-2 block font-mono">ID: ${block.id}</span>` : ''}
+                        </div>
+                    `;
+                });
+                return html;
+            };
+
+            teacherContent.innerHTML = renderTextBlocks(teacherText, 'primary');
+            studentContent.innerHTML = renderTextBlocks(studentText, 'tertiary');
+
+        } catch (err) {
+            console.error("Error loading aula details:", err);
+            teacherContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading content.</div>`;
+            studentContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading content.</div>`;
+        }
+    });
+  });
+</script>
+</body></html>
