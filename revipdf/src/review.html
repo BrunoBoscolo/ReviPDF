@@ -314,6 +314,16 @@
                 }
             }
 
+            // Check for short teacher material
+            let isTeacherMaterialShort = false;
+            let teacherCharCount = 0;
+            if (vocab && vocab.guia_do_professor && vocab.guia_do_professor.character_count !== undefined) {
+                teacherCharCount = vocab.guia_do_professor.character_count;
+                if (teacherCharCount < 2000) {
+                    isTeacherMaterialShort = true;
+                }
+            }
+
             // Build Content View using Bento Grid Design
             let html = `
                 <!-- 2. Metrics Overview (Bento Grid) -->
@@ -322,6 +332,21 @@
                 <div class="flex items-center gap-2 mb-4 mt-8 pb-2 border-b border-indigo-500/10">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Teacher Material Metrics</span>
                 </div>
+            `;
+
+            if (isTeacherMaterialShort) {
+                html += `
+                <div class="bg-error/10 text-error p-4 rounded-xl editorial-shadow border border-error/20 mb-6 flex items-center gap-4">
+                    <span class="material-symbols-outlined text-2xl">warning</span>
+                    <div>
+                        <h4 class="font-bold">Short Teacher Material</h4>
+                        <p class="text-sm">The teacher material contains fewer than 2,000 characters (Total: ${teacherCharCount} characters).</p>
+                    </div>
+                </div>
+                `;
+            }
+
+            html += `
                 <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
             `;
 

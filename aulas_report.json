@@ -163,11 +163,12 @@
                                     "ingenhousz": 1
                                 },
                                 "rare_words_and_jargon": {
-                                    "ener": 1.84,
-                                    "ingenhousz": 0.0
+                                    "ingenhousz": 0.0,
+                                    "ener": 1.84
                                 },
                                 "lexical_richness_ttr": 0.9286,
-                                "readability_avg_zipf": 4.2292
+                                "readability_avg_zipf": 4.2292,
+                                "character_count": 174
                             }
                         },
                         "conteudo_do_aluno": {
@@ -196,7 +197,8 @@
                                     "ingenhousz": 0.0
                                 },
                                 "lexical_richness_ttr": 1.0,
-                                "readability_avg_zipf": 4.5
+                                "readability_avg_zipf": 4.5,
+                                "character_count": 105
                             }
                         },
                         "atividades_do_aluno": {
@@ -215,7 +217,8 @@
                                 },
                                 "rare_words_and_jargon": {},
                                 "lexical_richness_ttr": 0.8,
-                                "readability_avg_zipf": 4.48
+                                "readability_avg_zipf": 4.48,
+                                "character_count": 80
                             }
                         }
                     }
