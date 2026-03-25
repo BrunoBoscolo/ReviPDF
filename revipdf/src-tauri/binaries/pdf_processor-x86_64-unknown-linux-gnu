@@ -221,7 +221,7 @@ def extract_named_entities(extracted_data, nlp):
     return {k: list(v) for k, v in entities.items()}
 
 
-def detect_semantic_redundancy(extracted_data, nlp, threshold=0.85):
+def detect_semantic_redundancy(extracted_data, nlp, threshold=0.95):
     """
     Cross-checks all paragraphs to find semantic redundancies using spaCy embeddings.
     Returns a list of tuples containing redundant paragraph pairs and their similarity score.

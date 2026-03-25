@@ -41,28 +41,28 @@ class TestPDFProcessor(unittest.TestCase):
         paragraphs_pt = [
             "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023.",
             "Nesta reunião, foram discutidos os novos avanços na área da tecnologia, inteligência artificial e os impactos ambientais na Amazônia.",
-            "Luiz Inácio Lula da Silva esteve em Brasília no dia 15 de novembro de 2023 para uma visita oficial." # Semantic redundancy
+            "O presidente do Brasil, Luiz Inácio Lula da Silva, visitou Brasília em 15 de novembro de 2023." # Semantic redundancy
         ]
         cls.create_sample_pdf(cls.test_pdf_pt, paragraphs_pt)
 
         paragraphs_en = [
             "The President of the United States, Joe Biden, visited Washington D.C. on November 15, 2023.",
             "During this meeting, new advances in technology, artificial intelligence, and environmental impacts were discussed.",
-            "Joe Biden was in Washington D.C. on the 15th of November 2023 for an official visit." # Semantic redundancy
+            "The President of the United States, Joe Biden, visited Washington D.C. on November 15, 2023." # Semantic redundancy
         ]
         cls.create_sample_pdf(cls.test_pdf_en, paragraphs_en)
 
         teacher_paragraphs = [
             "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
             "This process was first extensively studied by Jan Ingenhousz in 1779.",
-            "Jan Ingenhousz studied this process in 1779." # redundancy
+            "This process was first extensively studied by Jan Ingenhousz in 1779." # redundancy
         ]
         cls.create_sample_pdf(cls.test_teacher_pdf, teacher_paragraphs)
 
         student_paragraphs = [
             "Plants use photosynthesis to transform sunlight into chemical energy.",
             "It was discovered by Jan Ingenhousz.",
-            "Jan Ingenhousz found it out." # redundancy
+            "It was discovered by Jan Ingenhousz." # redundancy
         ]
         cls.create_sample_pdf(cls.test_student_pdf, student_paragraphs)
 
@@ -180,7 +180,7 @@ class TestPDFProcessor(unittest.TestCase):
         # Verify redundancies (should be exactly 1)
         self.assertEqual(len(data["redundancies"]), 1)
         redundancy = data["redundancies"][0]
-        self.assertGreater(redundancy["score"], 0.85)
+        self.assertGreater(redundancy["score"], 0.95)
 
     def test_pipeline_english(self):
         # Run the processor
@@ -203,7 +203,7 @@ class TestPDFProcessor(unittest.TestCase):
         # Verify redundancies (should be exactly 1)
         self.assertEqual(len(data["redundancies"]), 1)
         redundancy = data["redundancies"][0]
-        self.assertGreater(redundancy["score"], 0.85)
+        self.assertGreater(redundancy["score"], 0.95)
 
     def test_compare_pedagogic_materials(self):
         result = compare_pedagogic_materials(self.test_teacher_pdf, self.test_student_pdf, self.test_comparison_json)

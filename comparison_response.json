@@ -7,7 +7,7 @@
     },
     "teacher_redundancies": [
         {
-            "score": 0.9415,
+            "score": 1.0,
             "para1": {
                 "id": null,
                 "page": 1,
@@ -16,13 +16,13 @@
             "para2": {
                 "id": null,
                 "page": 1,
-                "text": "Jan Ingenhousz studied this process in 1779."
+                "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
             }
         }
     ],
     "student_redundancies": [
         {
-            "score": 0.903,
+            "score": 1.0,
             "para1": {
                 "id": null,
                 "page": 1,
@@ -31,7 +31,7 @@
             "para2": {
                 "id": null,
                 "page": 1,
-                "text": "Jan Ingenhousz found it out."
+                "text": "It was discovered by Jan Ingenhousz."
             }
         }
     ],
@@ -82,6 +82,19 @@
                 "page": 1,
                 "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
             }
+        },
+        {
+            "score": 0.8836,
+            "student_topic": {
+                "id": null,
+                "page": 1,
+                "text": "It was discovered by Jan Ingenhousz."
+            },
+            "teacher_topic": {
+                "id": null,
+                "page": 1,
+                "text": "This process was first extensively studied by Jan Ingenhousz in 1779."
+            }
         }
     ],
     "topic_order": {
@@ -96,9 +109,9 @@
             "process",
             "jan",
             "ingenhousz",
+            "process",
             "jan",
-            "ingenhousz",
-            "process"
+            "ingenhousz"
         ],
         "student_key_topics": [
             "plant",
@@ -122,16 +135,16 @@
             "energy": 1,
             "chemical": 1,
             "ener": 1,
-            "extensively": 1,
+            "extensively": 2,
             "study": 2,
             "jan": 2,
             "ingenhousz": 2
         },
         "rare_words_and_jargon": {
-            "ingenhousz": 0.0,
-            "ener": 1.84
+            "ener": 1.84,
+            "ingenhousz": 0.0
         },
-        "lexical_richness_ttr": 0.7222,
+        "lexical_richness_ttr": 0.6842,
         "readability_avg_zipf": 4.2292
     },
     "student_vocabulary": {
@@ -143,15 +156,14 @@
             "sunlight": 1,
             "chemical": 1,
             "energy": 1,
-            "discover": 1,
+            "discover": 2,
             "jan": 2,
-            "ingenhousz": 2,
-            "find": 1
+            "ingenhousz": 2
         },
         "rare_words_and_jargon": {
             "ingenhousz": 0.0
         },
-        "lexical_richness_ttr": 0.8462,
-        "readability_avg_zipf": 4.618
+        "lexical_richness_ttr": 0.7692,
+        "readability_avg_zipf": 4.5
     }
 }
