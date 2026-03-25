@@ -14,7 +14,7 @@
         },
         {
             "page": 1,
-            "text": "Joe Biden was in Washington D.C. on the 15th of November 2023 for an official visit."
+            "text": "The President of the United States, Joe Biden, visited Washington D.C. on November 15, 2023."
         }
     ],
     "named_entities": {
@@ -22,17 +22,16 @@
             "Joe Biden"
         ],
         "LOCATION": [
-            "the United States",
-            "Washington D.C."
+            "Washington D.C.",
+            "the United States"
         ],
         "DATE": [
-            "the 15th of November 2023",
             "November 15, 2023"
         ]
     },
     "redundancies": [
         {
-            "score": 0.9057,
+            "score": 1.0,
             "para1": {
                 "id": null,
                 "page": 1,
@@ -41,7 +40,7 @@
             "para2": {
                 "id": null,
                 "page": 1,
-                "text": "Joe Biden was in Washington D.C. on the 15th of November 2023 for an official visit."
+                "text": "The President of the United States, Joe Biden, visited Washington D.C. on November 15, 2023."
             }
         }
     ]
