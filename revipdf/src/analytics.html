@@ -310,31 +310,112 @@
         try {
             const teacherText = await readJsonSafe(`${aulaPath}/teacher.json`);
             const studentText = await readJsonSafe(`${aulaPath}/student.json`);
+            const redundancies = await readJsonSafe(`${aulaPath}/redundancies.json`);
+            const ner = await readJsonSafe(`${aulaPath}/ner_consistency.json`);
+            const vocab = await readJsonSafe(`${aulaPath}/vocabulary.json`);
 
-            const renderTextBlocks = (data, colorClass) => {
+            // Extract Highlight Data
+            const getRedundantIds = (sectionRedundancies) => {
+                const ids = new Set();
+                if (sectionRedundancies) {
+                    sectionRedundancies.forEach(r => {
+                        if (r.para1 && r.para1.id) ids.add(r.para1.id);
+                        if (r.para2 && r.para2.id) ids.add(r.para2.id);
+                    });
+                }
+                return ids;
+            };
+
+            const getUnusualWords = (sectionVocab) => {
+                if (!sectionVocab || !sectionVocab.rare_words_and_jargon) return [];
+                return Object.keys(sectionVocab.rare_words_and_jargon);
+            };
+
+            const getNerEntities = (nerConsistency, isTeacher) => {
+                const entities = [];
+                if (!nerConsistency || !nerConsistency.guia_vs_conteudo) return entities;
+
+                ['PERSON', 'LOCATION', 'DATE'].forEach(cat => {
+                    const catData = nerConsistency.guia_vs_conteudo[cat];
+                    if (catData) {
+                        if (catData.in_both) entities.push(...catData.in_both);
+                        if (isTeacher && catData.missing_in_student) entities.push(...catData.missing_in_student);
+                        if (!isTeacher && catData.missing_in_teacher) entities.push(...catData.missing_in_teacher);
+                    }
+                });
+                return [...new Set(entities)]; // Unique
+            };
+
+            const teacherRedundantIds = getRedundantIds(redundancies?.guia_do_professor);
+            const studentRedundantIds = getRedundantIds(redundancies?.conteudo_do_aluno);
+
+            const teacherUnusualWords = getUnusualWords(vocab?.guia_do_professor);
+            // student vocab key can be 'conteudo_do_aluno' or 'conteudo_do_livro_do_aluno'
+            const studentVocab = vocab?.conteudo_do_aluno || vocab?.conteudo_do_livro_do_aluno;
+            const studentUnusualWords = getUnusualWords(studentVocab);
+
+            const teacherNerEntities = getNerEntities(ner, true);
+            const studentNerEntities = getNerEntities(ner, false);
+
+            const highlightText = (text, unusualWords, nerEntities) => {
+                let highlighted = text;
+
+                // Highlight NER entities (Green)
+                nerEntities.forEach(entity => {
+                    if (entity.trim() === '') return;
+                    // Escape regex chars
+                    const safeEntity = entity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`\\b(${safeEntity})\\b`, 'gi');
+                    highlighted = highlighted.replace(regex, '<span class="bg-green-100 text-green-800 px-1 rounded font-medium">$1</span>');
+                });
+
+                // Highlight unusual words (Blue)
+                // We need to be careful not to highlight words already inside HTML tags
+                unusualWords.forEach(word => {
+                    if (word.trim() === '') return;
+                    const safeWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    // Regex matches the word not preceded by '<' or inside a tag
+                    const regex = new RegExp(`(?<!<[^>]*)(\\b${safeWord}\\b)(?![^<]*>)`, 'gi');
+                    highlighted = highlighted.replace(regex, '<span class="bg-blue-100 text-blue-800 px-1 rounded font-medium">$1</span>');
+                });
+
+                return highlighted;
+            };
+
+            const renderTextBlocks = (data, colorClass, redundantIds, unusualWords, nerEntities) => {
                 if (!data || data.length === 0) {
                     return '<div class="text-slate-500 text-center py-20">No data available for this section.</div>';
                 }
 
                 let html = '';
                 data.forEach(block => {
+                    const isRedundant = block.id && redundantIds.has(block.id);
+                    const cardClass = isRedundant
+                        ? 'bg-red-50 border-red-200 shadow-sm hover:shadow-md'
+                        : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md';
+
+                    const textContent = highlightText(block.text, unusualWords, nerEntities);
+
                     html += `
-                        <div class="p-5 rounded-xl bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative group">
+                        <div class="p-5 rounded-xl border transition-shadow relative group ${cardClass}">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-[10px] font-bold tracking-widest uppercase text-${colorClass} bg-${colorClass}/10 px-2 py-0.5 rounded">
-                                    Page ${block.page || '?'}
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold tracking-widest uppercase text-${colorClass} bg-${colorClass}/10 px-2 py-0.5 rounded">
+                                        Page ${block.page || '?'}
+                                    </span>
+                                    ${isRedundant ? '<span class="text-[10px] font-bold tracking-widest uppercase text-red-600 bg-red-100 px-2 py-0.5 rounded">Redundant</span>' : ''}
+                                </div>
                                 ${block.id ? `<span class="text-[10px] text-slate-400 font-mono">ID: ${block.id}</span>` : ''}
                             </div>
-                            <p class="text-sm leading-relaxed text-slate-700">${block.text}</p>
+                            <p class="text-sm leading-relaxed text-slate-700">${textContent}</p>
                         </div>
                     `;
                 });
                 return html;
             };
 
-            teacherContent.innerHTML = renderTextBlocks(teacherText, 'primary');
-            studentContent.innerHTML = renderTextBlocks(studentText, 'tertiary');
+            teacherContent.innerHTML = renderTextBlocks(teacherText, 'primary', teacherRedundantIds, teacherUnusualWords, teacherNerEntities);
+            studentContent.innerHTML = renderTextBlocks(studentText, 'tertiary', studentRedundantIds, studentUnusualWords, studentNerEntities);
 
         } catch (err) {
             console.error("Error loading aula details:", err);
