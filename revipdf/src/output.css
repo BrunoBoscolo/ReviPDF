@@ -1350,6 +1350,10 @@ input:where([type='file']):focus {
   background-color: rgb(255 218 214 / var(--tw-bg-opacity, 1));
 }
 
+.bg-error\/10 {
+  background-color: rgb(186 26 26 / 0.1);
+}
+
 .bg-error\/5 {
   background-color: rgb(186 26 26 / 0.05);
 }

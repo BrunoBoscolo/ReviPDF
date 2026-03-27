@@ -319,11 +319,14 @@ def evaluate_vocabulary(data, nlp):
     # Average Zipf frequency acts as a proxy for readability (higher = easier words used)
     avg_zipf = (total_zipf / valid_words_count) if valid_words_count > 0 else 0.0
 
+    character_count = sum(len(item["text"]) for item in data)
+
     return {
         "term_frequency": term_frequency,
         "rare_words_and_jargon": rare_words,
         "lexical_richness_ttr": round(ttr, 4),
-        "readability_avg_zipf": round(avg_zipf, 4)
+        "readability_avg_zipf": round(avg_zipf, 4),
+        "character_count": character_count
     }
 
 def validate_sense(teacher_data, student_data, nlp, threshold=0.85):
