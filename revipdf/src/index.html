@@ -303,6 +303,7 @@
           console.log("Setting localStorage and redirecting...");
           try {
             localStorage.setItem('currentPdfHash', capturedHash);
+            localStorage.setItem('currentPdfPath', filePath);
             console.log("localStorage updated successfully");
           } catch (storageError) {
             console.error("Failed to set localStorage:", storageError);
@@ -311,7 +312,7 @@
             console.warn("Falling back to URL parameters due to localStorage error.");
             showStatus('Processing complete! Redirecting...');
             setTimeout(() => {
-              window.location.href = `review.html?hash=${capturedHash}`;
+              window.location.href = `review.html?hash=${capturedHash}&path=${encodeURIComponent(filePath)}`;
             }, 1000);
             return;
           }

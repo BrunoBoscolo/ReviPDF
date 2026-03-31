@@ -818,7 +818,7 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
     else:
         raise ValueError("No text extracted from PDF to detect language.")
 
-    # 4. Process and compare sections for each aula within each chapter
+    # 4. Skip NLP processing during initial extraction, just save structure
     aulas_reports = []
     total_aulas = 0
     for chapter in chapters:
@@ -827,45 +827,10 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
             "aulas": []
         }
         for aula in chapter["aulas"]:
-            aula_report = compare_aula_sections(aula, nlp)
-            chapter_report["aulas"].append(aula_report)
+            chapter_report["aulas"].append({
+                "aula_info": f"Aula {aula['number']} - {aula['theme']}"
+            })
             total_aulas += 1
-
-            # Save separate JSONs for the NLP processes inside the chapter/aula directory
-            aula_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash, f"Chapter_{chapter['number']}", f"Aula_{aula['number']}")
-            os.makedirs(aula_dir, exist_ok=True)
-
-            topic_order = {
-                "guia_vs_conteudo": aula_report.get("guia_vs_conteudo", {}).get("topic_order", {}),
-                "guia_vs_atividades": aula_report.get("guia_vs_atividades", {}).get("topic_order", {}),
-                "conteudo_vs_atividades": aula_report.get("conteudo_vs_atividades", {}).get("topic_order", {})
-            }
-            with open(os.path.join(aula_dir, "topic_order.json"), 'w', encoding='utf-8') as f:
-                json.dump(topic_order, f, indent=4, ensure_ascii=False)
-
-            ner_consistency = {
-                "guia_vs_conteudo": aula_report.get("guia_vs_conteudo", {}).get("ner_consistency", {}),
-                "guia_vs_atividades": aula_report.get("guia_vs_atividades", {}).get("ner_consistency", {}),
-                "conteudo_vs_atividades": aula_report.get("conteudo_vs_atividades", {}).get("ner_consistency", {})
-            }
-            with open(os.path.join(aula_dir, "ner_consistency.json"), 'w', encoding='utf-8') as f:
-                json.dump(ner_consistency, f, indent=4, ensure_ascii=False)
-
-            redundancies = {
-                "guia_do_professor": aula_report.get("section_metrics", {}).get("guia_do_professor", {}).get("redundancies", []),
-                "conteudo_do_aluno": aula_report.get("section_metrics", {}).get("conteudo_do_aluno", {}).get("redundancies", []),
-                "atividades_do_aluno": aula_report.get("section_metrics", {}).get("atividades_do_aluno", {}).get("redundancies", [])
-            }
-            with open(os.path.join(aula_dir, "redundancies.json"), 'w', encoding='utf-8') as f:
-                json.dump(redundancies, f, indent=4, ensure_ascii=False)
-
-            vocabulary = {
-                "guia_do_professor": aula_report.get("section_metrics", {}).get("guia_do_professor", {}).get("vocabulary", {}),
-                "conteudo_do_aluno": aula_report.get("section_metrics", {}).get("conteudo_do_aluno", {}).get("vocabulary", {}),
-                "atividades_do_aluno": aula_report.get("section_metrics", {}).get("atividades_do_aluno", {}).get("vocabulary", {})
-            }
-            with open(os.path.join(aula_dir, "vocabulary.json"), 'w', encoding='utf-8') as f:
-                json.dump(vocabulary, f, indent=4, ensure_ascii=False)
 
         aulas_reports.append(chapter_report)
 
@@ -889,13 +854,141 @@ def process_aulas_from_pdf(filepath, output_json="aulas_report.json", hash_outpu
     sys.stdout.flush()
     return response_data
 
+
+def process_chapter(filepath, chapter_number, hash_output=None):
+    import json
+    import hashlib
+
+    # Calculate hash to find the root cache directory
+    hasher = hashlib.md5()
+    with open(filepath, 'rb') as f:
+        buf = f.read()
+        hasher.update(buf)
+    pdf_hash = hasher.hexdigest()
+
+    if hash_output:
+        import sys
+        try:
+            with open(hash_output, 'w', encoding='utf-8') as f:
+                f.write(pdf_hash)
+        except Exception as e:
+            print(f"Failed to write hash output: {e}", file=sys.stderr)
+
+    base_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash)
+    chapters_json_path = os.path.join(base_dir, "chapters.json")
+
+    if not os.path.exists(chapters_json_path):
+        raise ValueError(f"Cache not found for {filepath}. Please upload and process the PDF first.")
+
+    with open(chapters_json_path, 'r', encoding='utf-8') as f:
+        chapters = json.load(f)
+
+    # Find the specific chapter
+    target_chapter = None
+    for chapter in chapters:
+        if str(chapter["number"]).zfill(2) == str(chapter_number).zfill(2):
+            target_chapter = chapter
+            break
+
+    if not target_chapter:
+        raise ValueError(f"Chapter {chapter_number} not found in {filepath}.")
+
+    # Load data for all aulas in the chapter
+    chapter_dir = os.path.join(base_dir, f"Chapter_{target_chapter['number']}")
+    all_texts = []
+
+    # We rebuild the aula structure expected by compare_aula_sections
+    parsed_aulas = []
+
+    for aula_meta in target_chapter["aulas"]:
+        aula_dir = os.path.join(chapter_dir, f"Aula_{aula_meta['number']}")
+
+        try:
+            with open(os.path.join(aula_dir, "teacher.json"), 'r', encoding='utf-8') as f:
+                guia = json.load(f)
+            with open(os.path.join(aula_dir, "student.json"), 'r', encoding='utf-8') as f:
+                conteudo = json.load(f)
+            with open(os.path.join(aula_dir, "activities.json"), 'r', encoding='utf-8') as f:
+                atividades = json.load(f)
+        except Exception as e:
+            print(f"Failed to load cached files for Aula {aula_meta['number']}: {e}", file=sys.stderr)
+            continue
+
+        all_texts.extend(guia)
+        all_texts.extend(conteudo)
+        all_texts.extend(atividades)
+
+        parsed_aula = {
+            "number": aula_meta["number"],
+            "theme": aula_meta["theme"],
+            "guia_do_professor": guia,
+            "conteudo_do_aluno": conteudo,
+            "atividades_do_aluno": atividades
+        }
+        parsed_aulas.append(parsed_aula)
+
+    if not all_texts:
+         raise ValueError(f"No text found in Chapter {chapter_number} to detect language.")
+
+    nlp = detect_language_and_load_model(all_texts)
+
+    chapter_report = {
+        "chapter_info": f"Chapter {target_chapter['number']} - {target_chapter['theme']}",
+        "aulas": []
+    }
+
+    for aula in parsed_aulas:
+        aula_report = compare_aula_sections(aula, nlp)
+        chapter_report["aulas"].append(aula_report)
+
+        aula_dir = os.path.join(chapter_dir, f"Aula_{aula['number']}")
+        os.makedirs(aula_dir, exist_ok=True)
+
+        topic_order = {
+            "guia_vs_conteudo": aula_report.get("guia_vs_conteudo", {}).get("topic_order", {}),
+            "guia_vs_atividades": aula_report.get("guia_vs_atividades", {}).get("topic_order", {}),
+            "conteudo_vs_atividades": aula_report.get("conteudo_vs_atividades", {}).get("topic_order", {})
+        }
+        with open(os.path.join(aula_dir, "topic_order.json"), 'w', encoding='utf-8') as f:
+            json.dump(topic_order, f, indent=4, ensure_ascii=False)
+
+        ner_consistency = {
+            "guia_vs_conteudo": aula_report.get("guia_vs_conteudo", {}).get("ner_consistency", {}),
+            "guia_vs_atividades": aula_report.get("guia_vs_atividades", {}).get("ner_consistency", {}),
+            "conteudo_vs_atividades": aula_report.get("conteudo_vs_atividades", {}).get("ner_consistency", {})
+        }
+        with open(os.path.join(aula_dir, "ner_consistency.json"), 'w', encoding='utf-8') as f:
+            json.dump(ner_consistency, f, indent=4, ensure_ascii=False)
+
+        redundancies = {
+            "guia_do_professor": aula_report.get("section_metrics", {}).get("guia_do_professor", {}).get("redundancies", []),
+            "conteudo_do_aluno": aula_report.get("section_metrics", {}).get("conteudo_do_aluno", {}).get("redundancies", []),
+            "atividades_do_aluno": aula_report.get("section_metrics", {}).get("atividades_do_aluno", {}).get("redundancies", [])
+        }
+        with open(os.path.join(aula_dir, "redundancies.json"), 'w', encoding='utf-8') as f:
+            json.dump(redundancies, f, indent=4, ensure_ascii=False)
+
+        vocabulary = {
+            "guia_do_professor": aula_report.get("section_metrics", {}).get("guia_do_professor", {}).get("vocabulary", {}),
+            "conteudo_do_aluno": aula_report.get("section_metrics", {}).get("conteudo_do_aluno", {}).get("vocabulary", {}),
+            "atividades_do_aluno": aula_report.get("section_metrics", {}).get("atividades_do_aluno", {}).get("vocabulary", {})
+        }
+        with open(os.path.join(aula_dir, "vocabulary.json"), 'w', encoding='utf-8') as f:
+            json.dump(vocabulary, f, indent=4, ensure_ascii=False)
+
+    import sys
+    print(json.dumps({"pdf_hash": pdf_hash, "chapter": chapter_number, "status": "success"}), flush=True)
+    sys.stdout.flush()
+    return chapter_report
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="PDF Processor Sidecar")
-    parser.add_argument("mode", type=str, choices=["aulas", "pdf", "compare"], help="Processing mode")
+    parser.add_argument("mode", type=str, choices=["aulas", "pdf", "compare", "chapter"], help="Processing mode")
     parser.add_argument("file", type=str, help="Primary PDF file to process")
     parser.add_argument("--file2", type=str, help="Secondary PDF file (student) for comparison", default=None)
     parser.add_argument("--hash-output", type=str, help="File to write the resulting pdf_hash to", default=None)
+    parser.add_argument("--chapter", type=str, help="Chapter number to process (required for 'chapter' mode)", default=None)
 
     args = parser.parse_args()
 
@@ -908,3 +1001,8 @@ if __name__ == "__main__":
             print("Error: --file2 is required for 'compare' mode.")
             exit(1)
         compare_pedagogic_materials(args.file, args.file2)
+    elif args.mode == "chapter":
+        if not args.chapter:
+            print("Error: --chapter is required for 'chapter' mode.")
+            exit(1)
+        process_chapter(args.file, args.chapter, hash_output=args.hash_output)

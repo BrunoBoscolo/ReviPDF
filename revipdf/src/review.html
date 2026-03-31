@@ -127,17 +127,22 @@
     const documentMeta = document.getElementById('documentMeta');
 
     let pdfHash = null;
+    let pdfPath = null;
     try {
         pdfHash = localStorage.getItem('currentPdfHash');
+        pdfPath = localStorage.getItem('currentPdfPath');
         console.log("Retrieved pdfHash from localStorage:", pdfHash);
+        console.log("Retrieved pdfPath from localStorage:", pdfPath);
     } catch (e) {
         console.warn("Could not read from localStorage, checking URL params", e);
     }
 
-    if (!pdfHash) {
+    if (!pdfHash || !pdfPath) {
         const urlParams = new URLSearchParams(window.location.search);
-        pdfHash = urlParams.get('hash');
+        if (!pdfHash) pdfHash = urlParams.get('hash');
+        if (!pdfPath) pdfPath = urlParams.get('path');
         console.log("Retrieved pdfHash from URL:", pdfHash);
+        console.log("Retrieved pdfPath from URL:", pdfPath);
     }
 
     if (!pdfHash) {
@@ -217,7 +222,7 @@
         return;
     }
 
-    chapterSelect.addEventListener('change', () => {
+    chapterSelect.addEventListener('change', async () => {
         const selectedChap = chapterSelect.value;
         if (!selectedChap) {
             aulaSelect.disabled = true;
@@ -225,15 +230,51 @@
             return;
         }
 
-        aulaSelect.disabled = false;
-        aulaSelect.innerHTML = '<option value="">-- Choose Aula --</option>';
-        const aulas = chapterData[selectedChap].aulas || [];
-        aulas.forEach((aula, idx) => {
-            const opt = document.createElement('option');
-            opt.value = aula;
-            opt.textContent = `Aula ${aula.replace('Aula_', '')}`;
-            aulaSelect.appendChild(opt);
-        });
+        const chapNumber = selectedChap.replace('Chapter_', '');
+
+        aulaSelect.disabled = true;
+        aulaSelect.innerHTML = '<option value="">Processing Chapter...</option>';
+        viewerContent.innerHTML = `
+            <div class="text-center text-slate-500 py-20 flex flex-col items-center gap-4">
+                <span class="material-symbols-outlined text-4xl animate-spin">refresh</span>
+                <p>Analyzing NLP metrics for Chapter ${chapNumber}... This may take a minute.</p>
+            </div>
+        `;
+
+        try {
+            const { Command } = window.__TAURI__.shell;
+            const command = Command.sidecar("binaries/pdf_processor", ["chapter", pdfPath, "--chapter", chapNumber]);
+            const output = await command.execute();
+
+            if (output.code !== 0) {
+                console.error("Sidecar execution failed:", output);
+                viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error processing chapter: ${output.stderr}</div>`;
+                return;
+            }
+
+            console.log("Chapter processed successfully:", output.stdout);
+
+            aulaSelect.disabled = false;
+            aulaSelect.innerHTML = '<option value="">-- Choose Aula --</option>';
+            const aulas = chapterData[selectedChap].aulas || [];
+            aulas.forEach((aula, idx) => {
+                const opt = document.createElement('option');
+                opt.value = aula;
+                opt.textContent = `Aula ${aula.replace('Aula_', '')}`;
+                aulaSelect.appendChild(opt);
+            });
+
+            viewerContent.innerHTML = `
+                <div class="text-center text-slate-500 py-20">
+                    <span class="material-symbols-outlined text-4xl mb-4">check_circle</span>
+                    <p>Chapter ${chapNumber} processed! Select an Aula to view the results.</p>
+                </div>
+            `;
+
+        } catch (err) {
+            console.error("Failed to execute sidecar:", err);
+            viewerContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error starting processor: ${err}</div>`;
+        }
     });
 
     aulaSelect.addEventListener('change', async () => {

@@ -271,21 +271,33 @@ class TestPDFProcessor(unittest.TestCase):
 
         self.assertEqual(aula_report["aula_info"], "Aula 01 - Introdução à Fotossíntese")
 
-        # Check section metrics exist
-        self.assertIn("guia_do_professor", aula_report["section_metrics"])
-        self.assertIn("conteudo_do_aluno", aula_report["section_metrics"])
-        self.assertIn("atividades_do_aluno", aula_report["section_metrics"])
+    def test_process_chapter(self):
+        from pdf_processor import process_chapter, extract_and_cache_pdf
+        import hashlib
 
-        # Check that comparison objects are populated
-        self.assertIn("guia_vs_conteudo", aula_report)
-        self.assertIn("guia_vs_atividades", aula_report)
-        self.assertIn("conteudo_vs_atividades", aula_report)
+        # Ensure it is extracted first to build cache structure
+        extract_and_cache_pdf(self.test_chapter_aula_pdf)
 
-        # Basic spot check of contents
-        guia_vs_conteudo = aula_report["guia_vs_conteudo"]
-        self.assertNotIn("sense_validation", guia_vs_conteudo) # No longer validating paragraphs across sections
-        self.assertIn("topic_order", guia_vs_conteudo)
-        self.assertIn("ner_consistency", guia_vs_conteudo)
+        hasher = hashlib.md5()
+        with open(self.test_chapter_aula_pdf, 'rb') as f:
+            hasher.update(f.read())
+        pdf_hash = hasher.hexdigest()
+
+        # Run process_chapter
+        report = process_chapter(self.test_chapter_aula_pdf, "01")
+
+        # Verify it returns the aula structure
+        self.assertEqual(report["chapter_info"], "Chapter 01 - Plant Biology")
+        self.assertEqual(len(report["aulas"]), 1)
+
+        # Verify JSON metrics were written
+        import tempfile
+        base_dir = os.path.join(tempfile.gettempdir(), "ReviPDF_Cache", pdf_hash, "Chapter_01", "Aula_01")
+
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "topic_order.json")))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "ner_consistency.json")))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "redundancies.json")))
+        self.assertTrue(os.path.exists(os.path.join(base_dir, "vocabulary.json")))
 
     def test_caching_and_directory_structure(self):
         import hashlib
