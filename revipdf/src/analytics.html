@@ -23,6 +23,12 @@
     </style>
 </head>
 <body class="bg-background text-on-surface selection:bg-primary/20">
+<!-- Global Loader Overlay -->
+<div id="global-loader" class="fixed inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="text-4xl font-black tracking-tighter bg-gradient-to-r from-primary via-tertiary to-primary bg-clip-text text-transparent animate-gradient-x">
+        ReviPDF
+    </div>
+</div>
 
 <!-- TopAppBar Component -->
 <header class="fixed top-0 right-0 left-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-indigo-500/10 h-16 flex items-center justify-between px-8">
@@ -423,6 +429,34 @@
             studentContent.innerHTML = `<div class="p-4 bg-red-100 text-red-800 rounded">Error loading content.</div>`;
         }
     });
+  });
+
+  // Loader Logic
+  window.addEventListener('load', () => {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+      loader.classList.add('opacity-0');
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 500);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#') && link.target !== '_blank') {
+      const loader = document.getElementById('global-loader');
+      if (loader) {
+        e.preventDefault();
+        loader.style.display = 'flex';
+        setTimeout(() => {
+          loader.classList.remove('opacity-0');
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, 300);
+        }, 10);
+      }
+    }
   });
 </script>
 </body></html>
