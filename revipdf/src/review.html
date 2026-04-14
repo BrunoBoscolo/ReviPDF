@@ -247,16 +247,11 @@
             const firstAula = aulasList[0];
             const checkPath = `${basePath}/${selectedChap}/${firstAula}/redundancies.json`;
             try {
-                // If exists is available from __TAURI__.fs it would be best,
-                // but readTextFile with a try-catch is also effective.
-                const { exists } = window.__TAURI__.fs;
-                if (exists) {
-                    isProcessed = await exists(checkPath, { baseDir: BaseDirectory.Temp });
-                } else {
-                    await readTextFile(checkPath, { baseDir: BaseDirectory.Temp });
-                    isProcessed = true;
-                }
+                // Simply try to read the file since we already have fs:allow-read-text-file permission for $TEMP/**
+                await readTextFile(checkPath, { baseDir: BaseDirectory.Temp });
+                isProcessed = true;
             } catch (e) {
+                console.warn("Cache check failed or file missing:", e);
                 isProcessed = false;
             }
         }
