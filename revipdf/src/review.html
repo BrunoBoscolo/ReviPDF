@@ -748,26 +748,73 @@
   // Loader Logic
   window.addEventListener('load', () => {
     const loader = document.getElementById('global-loader');
+    const aside = document.querySelector('aside');
     if (loader) {
       loader.classList.add('opacity-0');
+      if (aside) aside.style.opacity = '1';
       setTimeout(() => {
         loader.style.display = 'none';
       }, 500);
     }
   });
 
-  document.addEventListener('click', (e) => {
+  const showErrorToast = (msg) => {
+    let toast = document.getElementById('error-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'error-toast';
+      toast.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl z-[10000] font-bold text-sm transition-all duration-300 opacity-0 translate-y-4';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span class="material-symbols-outlined align-middle mr-2 text-lg">error</span>${msg}`;
+
+    // Show toast
+    setTimeout(() => {
+      toast.classList.remove('opacity-0', 'translate-y-4');
+    }, 10);
+
+    // Hide toast after 3s
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'translate-y-4');
+    }, 3000);
+  };
+
+  document.addEventListener('click', async (e) => {
     const link = e.target.closest('a');
     if (link && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#') && link.target !== '_blank') {
       const loader = document.getElementById('global-loader');
+      const aside = document.querySelector('aside');
+
       if (loader) {
         e.preventDefault();
         loader.style.display = 'flex';
-        setTimeout(() => {
+        if (aside) aside.style.opacity = '0'; // Hide sidebar
+
+        // Give a tiny delay for browser to render display:flex before animating opacity
+        setTimeout(async () => {
           loader.classList.remove('opacity-0');
-          setTimeout(() => {
-            window.location.href = link.href;
-          }, 300);
+
+          try {
+            // Verify if the destination exists
+            const response = await fetch(link.href, { method: 'HEAD' });
+            if (response.ok || response.status === 0) {
+              setTimeout(() => {
+                window.location.href = link.href;
+              }, 300); // Wait for fade in
+            } else {
+              throw new Error('Page not found');
+            }
+          } catch (err) {
+            // Redirect failed
+            setTimeout(() => {
+              loader.classList.add('opacity-0');
+              if (aside) aside.style.opacity = '1';
+              setTimeout(() => {
+                loader.style.display = 'none';
+                showErrorToast("Could not load the page. It might not exist.");
+              }, 500);
+            }, 300);
+          }
         }, 10);
       }
     }
