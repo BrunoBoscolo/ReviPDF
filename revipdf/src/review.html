@@ -229,6 +229,7 @@
         return;
     }
 
+
     chapterSelect.addEventListener('change', async () => {
         const selectedChap = chapterSelect.value;
         if (!selectedChap) {
@@ -239,8 +240,46 @@
 
         const chapNumber = selectedChap.replace('Chapter_', '');
 
+        // Check if already processed
+        let isProcessed = false;
+        const aulasList = chapterData[selectedChap].aulas || [];
+        if (aulasList.length > 0) {
+            const firstAula = aulasList[0];
+            const checkPath = `${basePath}/${selectedChap}/${firstAula}/redundancies.json`;
+            try {
+                // Simply try to read the file since we already have fs:allow-read-text-file permission for $TEMP/**
+                await readTextFile(checkPath, { baseDir: BaseDirectory.Temp });
+                isProcessed = true;
+            } catch (e) {
+                console.warn("Cache check failed or file missing:", e);
+                isProcessed = false;
+            }
+        }
+
+        if (isProcessed) {
+            console.log(`Chapter ${chapNumber} already processed. Loading from cache.`);
+
+            aulaSelect.disabled = false;
+            aulaSelect.innerHTML = '<option value="">-- Choose Aula --</option>';
+            aulasList.forEach((aula, idx) => {
+                const opt = document.createElement('option');
+                opt.value = aula;
+                opt.textContent = `Aula ${aula.replace('Aula_', '')}`;
+                aulaSelect.appendChild(opt);
+            });
+
+            viewerContent.innerHTML = `
+                <div class="text-center text-slate-500 py-20">
+                    <span class="material-symbols-outlined text-4xl mb-4">check_circle</span>
+                    <p>Chapter ${chapNumber} loaded from cache! Select an Aula to view the results.</p>
+                </div>
+            `;
+            return;
+        }
+
         aulaSelect.disabled = true;
         aulaSelect.innerHTML = '<option value="">Processing Chapter...</option>';
+
         viewerContent.innerHTML = `
             <div class="text-center text-slate-500 py-20 flex flex-col items-center gap-4">
                 <span class="material-symbols-outlined text-4xl animate-spin">refresh</span>
