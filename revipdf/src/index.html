@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>PDF Revise - Document Manager</title>
+    <title>ReviPDF - Revision Tool</title>
     <!-- We must use locally compiled Tailwind CSS per memory constraints -->
     <link href="output.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -39,8 +39,8 @@
 <span class="material-symbols-outlined">description</span>
 </div>
 <div>
-<h1 class="text-slate-900 dark:text-white font-bold text-lg leading-none">PDF Revise</h1>
-<p class="text-slate-500 dark:text-slate-400 text-xs">Document Manager</p>
+<h1 class="text-slate-900 dark:text-white font-bold text-lg leading-none">ReviPDF</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Revision Tool</p>
 </div>
 </div>
 <nav class="flex-1 px-4 space-y-1 mt-4">
@@ -53,25 +53,10 @@
 <span class="text-sm">Files</span>
 </a>
 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors" href="#">
-<span class="material-symbols-outlined">schedule</span>
-<span class="text-sm">Recent</span>
-</a>
-<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors" href="#">
 <span class="material-symbols-outlined">settings</span>
 <span class="text-sm">Settings</span>
 </a>
 </nav>
-<div class="p-4 border-t border-slate-200 dark:border-slate-800">
-<div class="flex items-center gap-3 p-2">
-<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-<img alt="User Profile" data-alt="Avatar of a professional user profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxy5dlaMnwuNHp28xrMOUYKyLu9eqvHaB7-ZZRXN53InIIpGn4218VYWGyr4GcJTFKoJQJZ4Oqkihp8qAn3SfwW0JHqrEknevOq8uhovT1ou3Y8cYZqRSScu9A4If3_YytHs_lEZPS068Z4trCoPDBIf0SDCtcutzKssxW5a1IF7-Q4vilHrA_WNn64mUDJ2ZZoew3LXh3m-19Kfwo5xxJVJ0OmOQPX1aK56CkF3QBTfxWlEodjjOAAtbdRsMnakzvmE-6wrf8LV6d"/>
-</div>
-<div class="flex-1 min-w-0">
-<p class="text-sm font-medium text-slate-900 dark:text-white truncate">Alex Miller</p>
-<p class="text-xs text-slate-500 truncate">Premium Plan</p>
-</div>
-</div>
-</div>
 </aside>
 <!-- Main Content -->
 <main class="flex-1 flex flex-col min-w-0">
@@ -109,118 +94,6 @@
                         </button>
 </div>
 <div id="statusMessage" class="mt-4 text-sm font-medium text-primary hidden"></div>
-</div>
-<!-- Recent Documents Section -->
-<div>
-<div class="flex items-center justify-between mb-6">
-<h3 class="text-xl font-bold text-slate-900 dark:text-white">Recent Documents</h3>
-<button class="text-primary text-sm font-semibold hover:underline">View All</button>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-<!-- Doc Card 1 -->
-<div class="group">
-<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
-<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
-<div class="w-full h-full flex items-center justify-center p-6">
-<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Visual thumbnail preview of a document page with text and charts" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1thG-lix7H00XWKtK7DxFsJErmos2TVDradLyTVZnWv9VyI0afd8pi7P_0JUH9QPCJ6-Osv6IMaI4I7RJUzSI3ZVMBWI8Kc73hhrgc804QcdeG7F37qOR3ztcfOMu4bn6im8qP_ev1fuysb9pUuCGesGQ5ajRzEMdZ4-q-GsAiKGpiQ50uXjOFqZyC3CsVdrdzZKfNwsdQqVWMPWGPPt4aSNGz8p4BGkNiYIQFrVzz5xzDjYsondFDjx0RC46IQ6qevZcweUesi1F"/>
-</div>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100">
-<span class="material-symbols-outlined">edit</span>
-</button>
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900 hover:bg-slate-100">
-<span class="material-symbols-outlined">more_vert</span>
-</button>
-</div>
-</div>
-<h4 class="font-semibold text-slate-900 dark:text-white truncate">Q4 Project Report.pdf</h4>
-<p class="text-xs text-slate-500 mt-1">Edited 2h ago</p>
-</div>
-<!-- Doc Card 2 -->
-<div class="group">
-<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
-<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
-<div class="w-full h-full flex items-center justify-center p-6">
-<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Document thumbnail with minimalist layout and typography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwUwk6AINL86S-PR9Kn0FKTX9-z8HfrI90xgX87_PxCqtVScrwz8rExrASY_wvJwe-Ri657r5TAT_UTAEsVk3l181JXWnT7uT24qUGENhKZA75JPcqy09g-RQh3MCzZ-xlFWhB_sw0Ib_d5JhPsnvP4_p4607s6xemBoXtgfqcyXkliw5lnTJoFjHcSBpgRRdwS7QcqJ5ZqgbkjYsiT2oSZP7Ja03QqZpBKt5a0fZA9bEBeVEQVS2zQJwMfFgPglkigAzFveD6ujj6"/>
-</div>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
-<span class="material-symbols-outlined">edit</span>
-</button>
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
-<span class="material-symbols-outlined">more_vert</span>
-</button>
-</div>
-</div>
-<h4 class="font-semibold text-slate-900 dark:text-white truncate">User Feedback Analysis.pdf</h4>
-<p class="text-xs text-slate-500 mt-1">Edited 5h ago</p>
-</div>
-<!-- Doc Card 3 -->
-<div class="group">
-<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
-<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
-<div class="w-full h-full flex items-center justify-center p-6">
-<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Technical document thumbnail with blue abstract shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKr2R0sV0ni8Z6OUS5_vwSpL0_mS8RspPMcqHgKSI8VA1ovhPbxBwJpAMsfCbHS17qj6rvAQYy6Nze9CcxWvH_9uNc3PtXP_QGUrKCQnLxSUUZJ6nSwW-1-m6B5-lRhb8YA6WOAcfbw9aS_accBpQ2230ih6v3ACnIhQGpUhOddt-am4zQZBCEqjo2_dzj0G5nspCx-lomU0dagyQVhSosHOQMfW-gm5ifr179TR_KkijwC6t0eNvOr3FseA1KFafXuX9bL6HWjr1E"/>
-</div>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
-<span class="material-symbols-outlined">edit</span>
-</button>
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
-<span class="material-symbols-outlined">more_vert</span>
-</button>
-</div>
-</div>
-<h4 class="font-semibold text-slate-900 dark:text-white truncate">Budget Plan 2024.pdf</h4>
-<p class="text-xs text-slate-500 mt-1">Edited yesterday</p>
-</div>
-<!-- Doc Card 4 -->
-<div class="group">
-<div class="aspect-[3/4] rounded-xl bg-slate-200 dark:bg-slate-800 mb-3 relative overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 group-hover:shadow-md transition-shadow">
-<div class="absolute inset-0 bg-gradient-to-br from-slate-100/50 to-transparent"></div>
-<div class="w-full h-full flex items-center justify-center p-6">
-<img alt="PDF Preview" class="w-full h-full object-cover rounded shadow-lg" data-alt="Dark themed document cover with purple accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXE9XNka05Ylasj-XE9UQPn7X6r67Y9Z7xhKVm_IkF2zpKzVCozWS8mjQDzUa08oAS83KWyv0Lr6YyPj1n9xmHzPSnC_8f6X-uHMGsy83EIBHusQtOUkuVQfMH3bVAwMOI3h2MJiSu9QjnBW3MOwPRULg-FoaAFMmVaEu-r2fN9cR9wodgdnejXOIljW6GDxODJRrszVjmv-dnfblHhIxsGFppTrPEB0gA2y-L0-pTbTd25aI_vm2PznIt9sCRH886BJiFXbZsn1iS"/>
-</div>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
-<span class="material-symbols-outlined">edit</span>
-</button>
-<button class="size-10 bg-white rounded-full flex items-center justify-center text-slate-900">
-<span class="material-symbols-outlined">more_vert</span>
-</button>
-</div>
-</div>
-<h4 class="font-semibold text-slate-900 dark:text-white truncate">Onboarding Guide.pdf</h4>
-<p class="text-xs text-slate-500 mt-1">Edited Oct 12</p>
-</div>
-</div>
-</div>
-<!-- Secondary Info Section -->
-<div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-<div class="flex items-center gap-3 mb-4">
-<span class="material-symbols-outlined text-primary">analytics</span>
-<h4 class="font-bold text-slate-900 dark:text-white">Revision Activity</h4>
-</div>
-<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">You have reviewed 12 documents this week. Keep going!</p>
-<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-<div class="bg-primary h-2 rounded-full w-[65%]"></div>
-</div>
-<div class="flex justify-between mt-2">
-<span class="text-xs text-slate-400">Weekly Goal: 20 Docs</span>
-<span class="text-xs font-bold text-slate-900 dark:text-white">65%</span>
-</div>
-</div>
-<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-<div>
-<h4 class="font-bold text-slate-900 dark:text-white mb-1">Get Unlimited Revisions</h4>
-<p class="text-sm text-slate-500 dark:text-slate-400">Upgrade to Pro for advanced AI features.</p>
-<button class="mt-4 text-primary font-bold text-sm">Upgrade Now →</button>
-</div>
-<div class="size-20 bg-primary/5 rounded-full flex items-center justify-center">
-<span class="material-symbols-outlined text-primary text-3xl">auto_awesome</span>
-</div>
-</div>
 </div>
 </div>
 </main>
